@@ -16,6 +16,6 @@ public class CarteDonneurRequest {
     private LocalDate dateEditionCarte;
     private String lieuCollecte;
 
-    @NotNulls
+    @NotNull
     private Long userId;
 }
