@@ -1,30 +1,9 @@
-import {
-  createContext,
-  useContext,
-  useMemo,
-  useState,
-  type ReactNode
-} from "react";
-import type {
-  AuthUser,
-  LoginPayload,
-  RegisterPayload,
-  SessionData
-} from "../types";
+import { useMemo, useState, type ReactNode } from "react";
+import type { SessionData } from "react-router-dom";
 import { clearSession, getStoredSession, saveSession } from "../lib/storage";
 import { authService } from "../services/auth.service";
-
-interface AuthContextValue {
-  user: AuthUser | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  loading: boolean;
-  login: (payload: LoginPayload) => Promise<SessionData>;
-  register: (payload: RegisterPayload) => Promise<SessionData>;
-  logout: () => void;
-}
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+import type { LoginPayload, RegisterPayload } from "../types";
+import { AuthContext, type AuthContextValue } from "./AuthContext";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<SessionData | null>(getStoredSession());
@@ -73,14 +52,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-
-  if (!context) {
-    throw new Error("useAuth doit être utilisé dans AuthProvider");
-  }
-
-  return context;
 }

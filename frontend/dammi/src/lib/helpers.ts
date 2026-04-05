@@ -1,5 +1,41 @@
 import axios from "axios";
 
+type DisplayUser = {
+  prenom?: string;
+  nom?: string;
+  email?: string;
+};
+
+type BloodTypeRef = {
+  aboGroup?: string;
+  label?: string;
+};
+
+type BloodTypeSource = {
+  typeSanguin?: BloodTypeRef;
+  typeSanguinLabel?: string;
+  aboGroup?: string;
+  label?: string;
+  typeSanguinId?: number | string;
+};
+
+type PointCollecteRef = {
+  nom?: string;
+};
+
+type PointCollecteSource = {
+  pointCollecte?: PointCollecteRef;
+  pointCollecteNom?: string;
+  nomPointCollecte?: string;
+  nom?: string;
+  pointCollecteId?: number | string;
+};
+
+type StockLike = {
+  quantiteDisponible?: number | string;
+  seuilMinimum?: number | string;
+};
+
 export function classNames(
   ...values: Array<string | false | null | undefined>
 ) {
@@ -39,12 +75,11 @@ export function formatDateTime(value?: string | null) {
 
 export function getApiErrorMessage(error: unknown) {
   if (axios.isAxiosError(error)) {
-    return (
-      error.response?.data?.message ??
-      error.response?.data?.error ??
-      error.message ??
-      "Erreur API"
-    );
+    const data = error.response?.data as
+      | { message?: string; error?: string }
+      | undefined;
+
+    return data?.message ?? data?.error ?? error.message ?? "Erreur API";
   }
 
   if (error instanceof Error) return error.message;
@@ -52,12 +87,12 @@ export function getApiErrorMessage(error: unknown) {
   return "Une erreur est survenue.";
 }
 
-export function getUserDisplayName(user?: any) {
+export function getUserDisplayName(user?: DisplayUser) {
   const fullName = [user?.prenom, user?.nom].filter(Boolean).join(" ").trim();
   return fullName || user?.email || "Inconnu";
 }
 
-export function getBloodTypeLabel(source?: any) {
+export function getBloodTypeLabel(source?: BloodTypeSource) {
   return (
     source?.typeSanguin?.aboGroup ??
     source?.typeSanguin?.label ??
@@ -68,7 +103,7 @@ export function getBloodTypeLabel(source?: any) {
   );
 }
 
-export function getPointCollecteName(source?: any) {
+export function getPointCollecteName(source?: PointCollecteSource) {
   return (
     source?.pointCollecte?.nom ??
     source?.pointCollecteNom ??
@@ -78,7 +113,7 @@ export function getPointCollecteName(source?: any) {
   );
 }
 
-export function isStockAlert(stock?: any) {
+export function isStockAlert(stock?: StockLike) {
   if (!stock) return false;
   return Number(stock.quantiteDisponible) <= Number(stock.seuilMinimum);
 }

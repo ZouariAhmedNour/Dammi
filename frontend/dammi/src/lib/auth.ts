@@ -1,5 +1,56 @@
 import type { AuthUser, Role, SessionData } from "../types";
 
+type JwtPayload = {
+  sub?: string;
+  role?: unknown;
+  roles?: unknown;
+  authorities?: unknown;
+  userId?: unknown;
+  id?: unknown;
+  prenom?: unknown;
+  nom?: unknown;
+  firstName?: unknown;
+  lastName?: unknown;
+};
+
+type AuthLikeResponse = {
+  token?: string;
+  jwt?: string;
+  accessToken?: string;
+  access_token?: string;
+  role?: unknown;
+  authorities?: unknown;
+  email?: string;
+  prenom?: string;
+  nom?: string;
+  phone?: string;
+  avatar?: string;
+  userId?: unknown;
+  user?: {
+    id?: unknown;
+    prenom?: string;
+    nom?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+    avatar?: string;
+    role?: unknown;
+    authorities?: unknown;
+  };
+  currentUser?: {
+    id?: unknown;
+    prenom?: string;
+    nom?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+    avatar?: string;
+    role?: unknown;
+    authorities?: unknown;
+  };
+};
 
 function decodeBase64Url(value: string) {
   const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
@@ -7,13 +58,11 @@ function decodeBase64Url(value: string) {
   return atob(padded);
 }
 
-
-
-export function parseJwtPayload(token: string): Record<string, unknown> {
+export function parseJwtPayload(token: string): JwtPayload {
   try {
     const payload = token.split(".")[1];
     if (!payload) return {};
-    return JSON.parse(decodeBase64Url(payload));
+    return JSON.parse(decodeBase64Url(payload)) as JwtPayload;
   } catch {
     return {};
   }
@@ -35,7 +84,6 @@ export function normalizeRole(value: unknown): Role {
   return "USER";
 }
 
-
 export function resolveHomeRoute(role?: Role) {
   if (role === "ADMIN") return "/admin";
   if (role === "AGENT") return "/agent";
@@ -43,7 +91,7 @@ export function resolveHomeRoute(role?: Role) {
 }
 
 export function normalizeSessionFromAuthResponse(
-  response: any,
+  response: AuthLikeResponse,
   fallbackEmail = ""
 ): SessionData {
   const token =
@@ -58,7 +106,7 @@ export function normalizeSessionFromAuthResponse(
   }
 
   const payload = parseJwtPayload(token);
-  const responseUser = response?.user ?? response?.currentUser ?? response ?? {};
+  const responseUser = response?.user ?? response?.currentUser ?? {};
 
   const authorities =
     responseUser?.authorities ??
@@ -82,24 +130,24 @@ export function normalizeSessionFromAuthResponse(
       responseUser?.prenom ??
       responseUser?.firstName ??
       response?.prenom ??
-      payload?.prenom ??
-      payload?.firstName ??
+      (typeof payload?.prenom === "string" ? payload.prenom : undefined) ??
+      (typeof payload?.firstName === "string" ? payload.firstName : undefined) ??
       "",
     nom:
       responseUser?.nom ??
       responseUser?.lastName ??
       response?.nom ??
-      payload?.nom ??
-      payload?.lastName ??
+      (typeof payload?.nom === "string" ? payload.nom : undefined) ??
+      (typeof payload?.lastName === "string" ? payload.lastName : undefined) ??
       "",
     email:
       responseUser?.email ??
       response?.email ??
-      String(payload?.sub ?? fallbackEmail ?? ""),
+      (typeof payload?.sub === "string" ? payload.sub : fallbackEmail),
     phone: responseUser?.phone ?? response?.phone ?? "",
     avatar: responseUser?.avatar ?? response?.avatar ?? "",
     role
   };
 
-    return { token, user };
+  return { token, user };
 }
