@@ -44,10 +44,10 @@ public class PointCollecteController {
         return ResponseEntity.ok(service.getById(id));
     }
 
-    @GetMapping("/ville/{ville}")
-    @Operation(summary = "Points de collecte par ville — accès public")
-    public ResponseEntity<List<PointCollecte>> getByVille(@PathVariable String ville) {
-        return ResponseEntity.ok(service.getByVille(ville));
+    @GetMapping("/gouvernorat/{gouvernorat}")
+    @Operation(summary = "Points de collecte par gouvernorat")
+    public ResponseEntity<List<PointCollecte>> getByGouvernorat(@PathVariable String gouvernorat) {
+        return ResponseEntity.ok(service.getByGouvernorat(gouvernorat));
     }
 
     @PutMapping("/{id}")

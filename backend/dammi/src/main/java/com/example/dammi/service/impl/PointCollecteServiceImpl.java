@@ -32,8 +32,8 @@ public class PointCollecteServiceImpl implements PointCollecteService {
     public List<PointCollecte> getAll() { return repository.findAll(); }
 
     @Override
-    public List<PointCollecte> getByVille(String ville) {
-        return repository.findByVilleContainingIgnoreCase(ville);
+    public List<PointCollecte> getByGouvernorat(String gouvernorat) {
+        return repository.findByGouvernoratContainingIgnoreCase(gouvernorat);
     }
 
     @Override @Transactional
@@ -47,8 +47,10 @@ public class PointCollecteServiceImpl implements PointCollecteService {
 
     private PointCollecte toEntity(PointCollecteRequest req, PointCollecte pc) {
         pc.setNom(req.getNom());
-        pc.setAdresse(req.getAdresse());
-        pc.setVille(req.getVille());
+        pc.setGouvernorat(req.getGouvernorat());
+        pc.setDelegation(req.getDelegation());
+        pc.setCodePostal(req.getCodePostal());
+        pc.setAdressePostale(req.getAdressePostale());
         pc.setCapacite(req.getCapacite());
         pc.setTelephone(req.getTelephone());
         pc.setLatitude(req.getLatitude());

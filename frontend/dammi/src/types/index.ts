@@ -50,24 +50,43 @@ export interface TypeDon {
 export interface PointCollecte {
   id: number;
   nom: string;
-  adresse: string;
-  ville: string;
-  capacite: number;
-  telephone?: string;
-  latitude?: number;
-  longitude?: number;
-  description?: string;
-}
-
-export interface PointCollectePayload {
-  nom: string;
-  adresse: string;
-  ville: string;
+  gouvernorat: string;
+  delegation: string;
+  codePostal: string;
+  adressePostale: string;
   capacite: number;
   telephone?: string;
   latitude: number;
   longitude: number;
   description?: string;
+}
+
+export interface PointCollectePayload {
+  nom: string;
+  gouvernorat: string;
+  delegation: string;
+  codePostal: string;
+  adressePostale: string;
+  capacite: number;
+  telephone?: string;
+  latitude: number;
+  longitude: number;
+  description?: string;
+}
+
+export interface GouvernoratOption {
+  nom: string;
+  nomAr?: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface DelegationOption {
+  nom: string;
+  nomAr?: string;
+  codePostal: string;
+  latitude: number;
+  longitude: number;
 }
 
 export interface StockSanguin {

@@ -10,10 +10,17 @@ public class PointCollecteRequest {
     private String nom;
 
     @NotBlank
-    private String adresse;
+    private String gouvernorat;
 
     @NotBlank
-    private String ville;
+    private String delegation;
+
+    @NotBlank
+    @Pattern(regexp = "^\\d{4}$")
+    private String codePostal;
+
+    @NotBlank
+    private String adressePostale;
 
     @Min(1)
     private int capacite;

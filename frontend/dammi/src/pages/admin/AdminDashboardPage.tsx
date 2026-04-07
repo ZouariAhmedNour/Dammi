@@ -75,20 +75,21 @@ export function AdminDashboardPage() {
       </div>
 
       <div className="content-grid">
-        <Card
-          title="Derniers points de collecte"
-          subtitle="Les centres récemment ajoutés ou synchronisés."
-        >
-          <DataTable
-            data={points.slice(0, 6)}
-            columns={[
-              { header: "Nom", accessor: "nom" },
-              { header: "Ville", accessor: "ville" },
-              { header: "Adresse", accessor: "adresse" },
-              { header: "Capacité", accessor: "capacite" }
-            ]}
-          />
-        </Card>
+      <Card
+  title="Derniers points de collecte"
+  subtitle="Les centres récemment ajoutés ou synchronisés."
+>
+  <DataTable
+    data={points.slice(0, 6)}
+    columns={[
+      { header: "Nom", accessor: "nom" },
+      { header: "Gouvernorat", accessor: "gouvernorat" },
+      { header: "Délégation", accessor: "delegation" },
+      { header: "Adresse", accessor: "adressePostale" },
+      { header: "Capacité", accessor: "capacite" }
+    ]}
+  />
+</Card>
 
         <Card
           title="Stocks à surveiller"

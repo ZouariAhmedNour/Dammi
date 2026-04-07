@@ -23,13 +23,22 @@ public class PointCollecte {
     private String nom;
 
 
-    @NotBlank(message = "L'adresse est obligatoire")
-    @Column(nullable = false, length = 255)
-    private String adresse;
-
-    @NotBlank(message = "La ville est obligatoire")
+    @NotBlank(message = "Le gouvernorat est obligatoire")
     @Column(nullable = false, length = 100)
-    private String ville;
+    private String gouvernorat;
+
+    @NotBlank(message = "La délégation est obligatoire")
+    @Column(nullable = false, length = 150)
+    private String delegation;
+
+    @NotBlank(message = "Le code postal est obligatoire")
+    @Pattern(regexp = "^\\d{4}$", message = "Code postal invalide")
+    @Column(name = "code_postal", nullable = false, length = 10)
+    private String codePostal;
+
+    @NotBlank(message = "L'adresse postale est obligatoire")
+    @Column(name = "adresse_postale", nullable = false, length = 255)
+    private String adressePostale;
 
     @Min(value = 1, message = "La capacité doit être au moins 1")
     @Column(nullable = false)

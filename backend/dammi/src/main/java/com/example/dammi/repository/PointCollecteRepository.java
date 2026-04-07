@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 @Repository
 public interface PointCollecteRepository extends JpaRepository<PointCollecte, Long> {
-    List<PointCollecte> findByVille(String ville);
-    List<PointCollecte> findByVilleContainingIgnoreCase(String ville);
+    List<PointCollecte> findByGouvernoratContainingIgnoreCase(String gouvernorat);
+    List<PointCollecte> findByDelegationContainingIgnoreCase(String delegation);
 }
