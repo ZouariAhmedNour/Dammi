@@ -42,8 +42,17 @@ export interface TypeSanguin {
   aboGroup?: string;
 }
 
+export interface TypeSanguinPayload {
+  label: string;
+  aboGroup: string;
+}
+
 export interface TypeDon {
   id: number;
+  label: string;
+}
+
+export interface TypeDonPayload {
   label: string;
 }
 

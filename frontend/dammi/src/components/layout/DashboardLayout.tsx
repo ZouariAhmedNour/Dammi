@@ -1,6 +1,7 @@
-import {  Badge, Droplets, FileWarning, HeartHandshake, LayoutDashboard, LogOut, MapPinned, Shield, Users, Warehouse, type LucideIcon } from "lucide-react";
+import { Droplets, FileWarning, HeartHandshake, LayoutDashboard, LogOut, MapPinned, Shield, Users, Warehouse, type LucideIcon } from "lucide-react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/useAuth";
+import { Badge } from "../ui/Badge";
 
 type SectionKey = "admin" | "agent" | "user";
 
@@ -14,7 +15,9 @@ const menuBySection: Record<SectionKey, MenuItem[]> = {
   admin: [
     { label: "Dashboard", to: "/admin", icon: LayoutDashboard },
     { label: "Utilisateurs", to: "/admin/users", icon: Users },
-    { label: "Points de collecte", to: "/admin/points", icon: MapPinned }
+    { label: "Points de collecte", to: "/admin/points", icon: MapPinned },
+    { label: "Types de don", to: "/admin/types-don", icon: HeartHandshake },
+    { label: "Types sanguins", to: "/admin/types-sanguins", icon: Droplets }
   ],
   agent: [
     { label: "Dashboard", to: "/agent", icon: LayoutDashboard },

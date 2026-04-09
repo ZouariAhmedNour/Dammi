@@ -12,6 +12,8 @@ import { StocksPage } from './pages/agent/StocksPage';
 import { DemandesPage } from './pages/agent/DemandesPage';
 import { AgentDashboardPage } from './pages/agent/AgentDashboardPage';
 import { UserHomePage } from './pages/user/UserHomePage';
+import { AdminTypeSanguinPage } from './pages/admin/TypeSanguinPage';
+import { AdminTypeDonPage } from './pages/admin/TypeDonPage';
 
 function App() {
  return (
@@ -28,6 +30,8 @@ function App() {
           <Route index element={<AdminDashboardPage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="points" element={<PointsCollectePage />} />
+          <Route path="types-don" element={<AdminTypeDonPage />} />
+          <Route path="types-sanguins" element={<AdminTypeSanguinPage />} />
         </Route>
       </Route>
 
