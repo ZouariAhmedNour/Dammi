@@ -17,7 +17,8 @@ import type {
   DelegationOption,
   GouvernoratOption,
   PointCollecte,
-  PointCollectePayload
+  PointCollectePayload,
+  TypeDon
 } from "../../types";
 
 import { pointCollecteService } from "../../services/pointCollecte.service";
@@ -29,6 +30,8 @@ import { Card } from "../../components/ui/Card";
 import { InputField, TextAreaField } from "../../components/ui/Field";
 import { Button } from "../../components/ui/Button";
 import { DataTable } from "../../components/ui/DataTable";
+import { creneauService } from "../../services/creneau.service";
+import { typeService } from "../../services/type.service";
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
@@ -48,6 +51,9 @@ type FormState = {
   latitude: string;
   longitude: string;
   description: string;
+  typeDonIds: number[];
+  autoGeneratePlanning: boolean;
+  planningYear: string;
 };
 
 const TUNISIA_CENTER: [number, number] = [34.0, 9.0];
@@ -62,7 +68,10 @@ const initialForm: FormState = {
   telephone: "",
  latitude: String(TUNISIA_CENTER[0]),
   longitude: String(TUNISIA_CENTER[1]),
-  description: ""
+  description: "",
+  typeDonIds: [],
+  autoGeneratePlanning: false,
+  planningYear: String(new Date().getFullYear())
 };
 
 function ChangeMapView({ center }: { center: [number, number] }) {
@@ -108,39 +117,54 @@ export function PointsCollectePage() {
   const [points, setPoints] = useState<PointCollecte[]>([]);
   const [gouvernorats, setGouvernorats] = useState<GouvernoratOption[]>([]);
   const [delegations, setDelegations] = useState<DelegationOption[]>([]);
+  const [donationTypes, setDonationTypes] = useState<TypeDon[]>([]);
   const [form, setForm] = useState<FormState>(initialForm);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [mapCenter, setMapCenter] = useState<[number, number]>(TUNISIA_CENTER);
 
   async function loadPoints() {
     const data = await pointCollecteService.getAll();
     setPoints(data);
   }
-
-  async function loadGouvernorats() {
-    const data = await localisationService.getGouvernorats();
-    setGouvernorats(data);
-  }
-
-  async function loadAll() {
+  
+  useEffect(() => {
+  async function init() {
     setLoading(true);
     setError("");
+
     try {
-      await Promise.all([loadPoints(), loadGouvernorats()]);
+      const [pointsData, gouvernoratsData, donationTypesData] =
+        await Promise.all([
+          pointCollecteService.getAll(),
+          localisationService.getGouvernorats(),
+          typeService.getDonationTypes()
+        ]);
+
+      setPoints(pointsData);
+      setGouvernorats(gouvernoratsData);
+      setDonationTypes(donationTypesData);
     } catch (err) {
       setError(getApiErrorMessage(err));
     } finally {
       setLoading(false);
     }
   }
+  init();
+}, []);
 
-  useEffect(() => {
-    loadAll();
-  }, []);
+   function resetForm() {
+    setForm(initialForm);
+    setDelegations([]);
+    setEditingId(null);
+    setMapCenter(TUNISIA_CENTER);
+    setError("");
+    setSuccess("");
+  }
 
   function mapFormToPayload(state: FormState): PointCollectePayload {
     return {
@@ -153,7 +177,8 @@ export function PointsCollectePage() {
       telephone: state.telephone || undefined,
       latitude: Number(state.latitude),
       longitude: Number(state.longitude),
-      description: state.description || undefined
+      description: state.description || undefined,
+      typeDonIds: state.typeDonIds    
     };
   }
 
@@ -165,6 +190,20 @@ export function PointsCollectePage() {
     }));
     setMapCenter([lat, lng]);
   }
+
+  function handleTypeDonToggle(typeId: number) {
+    setForm((prev) => {
+      const exists = prev.typeDonIds.includes(typeId);
+
+      return {
+        ...prev,
+        typeDonIds: exists
+          ? prev.typeDonIds.filter((id) => id !== typeId)
+          : [...prev.typeDonIds, typeId]
+      };
+    });
+  }
+
 
   async function handleGouvernoratChange(value: string) {
     setError("");
@@ -215,21 +254,34 @@ setDelegations(dedupeDelegations(data));
     e.preventDefault();
     setSaving(true);
     setError("");
+    setSuccess("");
 
     try {
-      const payload = mapFormToPayload(form);
-
-      if (editingId) {
-        await pointCollecteService.update(editingId, payload);
-      } else {
-        await pointCollecteService.create(payload);
+      if (form.typeDonIds.length === 0) {
+        throw new Error("Sélectionne au moins un type de don");
       }
 
-      setForm(initialForm);
-      setDelegations([]);
-      setEditingId(null);
-      setMapCenter(TUNISIA_CENTER);
+      const payload = mapFormToPayload(form);
+
+      const savedPoint = editingId
+        ? await pointCollecteService.update(editingId, payload)
+        : await pointCollecteService.create(payload);
+
+      if (form.autoGeneratePlanning) {
+        await creneauService.generatePlanning(
+          savedPoint.id,
+          Number(form.planningYear)
+        );
+      }
+
+      resetForm();
       await loadPoints();
+
+      setSuccess(
+        form.autoGeneratePlanning
+          ? "Point enregistré et planning annuel généré avec succès."
+          : "Point enregistré avec succès."
+      );
     } catch (err) {
       setError(getApiErrorMessage(err));
     } finally {
@@ -239,6 +291,7 @@ setDelegations(dedupeDelegations(data));
 
   async function handleEdit(point: PointCollecte) {
     setEditingId(point.id);
+    setSuccess("");
     setForm({
       nom: point.nom,
       gouvernorat: point.gouvernorat,
@@ -249,7 +302,10 @@ setDelegations(dedupeDelegations(data));
       telephone: point.telephone || "",
       latitude: String(point.latitude),
       longitude: String(point.longitude),
-      description: point.description || ""
+      description: point.description || "",
+      typeDonIds: point.typesDon?.map((t) => t.id) ?? [],
+      autoGeneratePlanning: false,
+      planningYear: String(new Date().getFullYear())
     });
     setMapCenter([point.latitude, point.longitude]);
 
@@ -297,10 +353,12 @@ setDelegations(dedupeDelegations(data));
     <div className="stack-lg">
       <PageHeader
         title="Points de collecte"
-        description="Création et gestion des centres de collecte avec carte et localisation."
+        description="Création et gestion des centres de collecte avec types de don et génération
+        automatique de planning."
       />
 
       {error ? <div className="alert alert--error">{error}</div> : null}
+      {success ? <div className="alert alert--success">{success}</div> : null}
 
       <Card
         title={editingId ? "Modifier un point" : "Ajouter un point"}
@@ -328,6 +386,40 @@ setDelegations(dedupeDelegations(data));
               required
             />
           </div>
+
+          <div>
+            <label className="field__label">Types de don proposés</label>
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                flexWrap: "wrap",
+                marginTop: 10
+              }}
+            >
+              {donationTypes.map((type) => (
+                <label
+                  key={type.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    border: "1px solid #ddd",
+                    borderRadius: 10,
+                    padding: "10px 14px"
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={form.typeDonIds.includes(type.id)}
+                    onChange={() => handleTypeDonToggle(type.id)}
+                  />
+                  <span>{type.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
 
           <div className="grid-two">
             <div>
@@ -445,6 +537,41 @@ setDelegations(dedupeDelegations(data));
             }
           />
 
+          <Card
+            title="Planning automatique"
+            subtitle="Ce bouton ne génère pas tout de suite. Il active la génération lors de l’enregistrement du point."
+          >
+            <div className="grid-two">
+              <InputField
+                label="Année du planning"
+                type="number"
+                min={new Date().getFullYear()}
+                value={form.planningYear}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, planningYear: e.target.value }))
+                }
+              />
+
+              <div style={{ display: "flex", alignItems: "end" }}>
+                <Button
+                  type="button"
+                  variant={form.autoGeneratePlanning ? "primary" : "secondary"}
+                  onClick={() =>
+                    setForm((prev) => ({
+                      ...prev,
+                      autoGeneratePlanning: !prev.autoGeneratePlanning
+                    }))
+                  }
+                  disabled={form.typeDonIds.length === 0}
+                >
+                  {form.autoGeneratePlanning
+                    ? "Génération 12 mois activée"
+                    : "Activer génération 12 mois"}
+                </Button>
+              </div>
+            </div>
+          </Card>
+
           <div className="inline-actions">
             <Button type="submit" disabled={saving}>
               {saving
@@ -493,6 +620,11 @@ setDelegations(dedupeDelegations(data));
             { header: "Délégation", accessor: "delegation" },
             { header: "Code postal", accessor: "codePostal" },
             { header: "Adresse", accessor: "adressePostale" },
+             {
+              header: "Types de don",
+              render: (point) =>
+                point.typesDon?.map((type) => type.label).join(", ") || "-"
+            },
             {
               header: "Actions",
               render: (point) => (

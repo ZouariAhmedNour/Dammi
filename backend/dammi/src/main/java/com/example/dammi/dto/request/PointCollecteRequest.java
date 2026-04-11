@@ -3,6 +3,8 @@ package com.example.dammi.dto.request;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class PointCollecteRequest {
     @NotBlank
@@ -36,4 +38,7 @@ public class PointCollecteRequest {
 
     @Size(max = 500)
     private String description;
+
+    @NotEmpty(message = "Sélectionnez au moins un type de don")
+    private List<Long> typeDonIds;
 }

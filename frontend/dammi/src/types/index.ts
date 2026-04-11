@@ -68,6 +68,7 @@ export interface PointCollecte {
   latitude: number;
   longitude: number;
   description?: string;
+  typesDon?: TypeDon[];
 }
 
 export interface PointCollectePayload {
@@ -81,6 +82,7 @@ export interface PointCollectePayload {
   latitude: number;
   longitude: number;
   description?: string;
+  typeDonIds: number[];
 }
 
 export interface GouvernoratOption {
