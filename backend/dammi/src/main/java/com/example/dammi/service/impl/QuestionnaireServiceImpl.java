@@ -3,8 +3,7 @@ package com.example.dammi.service.impl;
 import com.example.dammi.dto.request.*;
 import com.example.dammi.dto.response.*;
 import com.example.dammi.entity.*;
-import com.example.dammi.entity.enums.QuestionTypeReponse;
-import com.example.dammi.entity.enums.QuestionnaireResultat;
+import com.example.dammi.entity.enums.*;
 import com.example.dammi.exception.ResourceNotFoundException;
 import com.example.dammi.repository.*;
 import com.example.dammi.service.QuestionnaireService;
@@ -82,7 +81,10 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
 
     @Override
     @Transactional
-    public List<QuestionnaireQuestionResponse> assignQuestions(Long questionnaireId, QuestionnaireAssignQuestionsRequest request) {
+    public List<QuestionnaireQuestionResponse> assignQuestions(
+            Long questionnaireId,
+            QuestionnaireAssignQuestionsRequest request
+    ) {
         Questionnaire questionnaire = questionnaireRepository.findById(questionnaireId)
                 .orElseThrow(() -> new ResourceNotFoundException("Questionnaire", "id", questionnaireId));
 
@@ -137,12 +139,14 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
                 .questionnaire(questionnaire)
                 .dateSoumission(LocalDateTime.now())
                 .resultat(QuestionnaireResultat.EN_ATTENTE)
+                .motifResultat(null)
                 .build();
 
         userQuestionnaire = userQuestionnaireRepository.save(userQuestionnaire);
 
         List<Answer> answers = new ArrayList<>();
-        boolean bloquant = false;
+        NiveauBlocage maxBlocage = NiveauBlocage.NONE;
+        List<String> motifs = new ArrayList<>();
 
         for (AnswerRequest answerRequest : request.getReponses()) {
             Question question = questionRepository.findById(answerRequest.getQuestionId())
@@ -162,30 +166,35 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
 
             answers.add(answer);
 
-            if (isBlockingAnswer(question, answerRequest.getValeur())) {
-                bloquant = true;
+            EvaluationResult evaluation = evaluateAnswer(question, answerRequest.getValeur(), user);
+            if (isMoreSevere(evaluation.niveauBlocage(), maxBlocage)) {
+                maxBlocage = evaluation.niveauBlocage();
+            }
+            if (evaluation.motif() != null && !evaluation.motif().isBlank()) {
+                motifs.add(evaluation.motif());
             }
         }
 
         for (QuestionnaireQuestion questionnaireQuestion : assignedQuestions) {
-            if (questionnaireQuestion.isObligatoire() && !answeredQuestionIds.contains(questionnaireQuestion.getQuestion().getId())) {
-                throw new IllegalArgumentException(
-                        "La question obligatoire " + questionnaireQuestion.getQuestion().getTexte() + " n'a pas été renseignée"
-                );
+            Question q = questionnaireQuestion.getQuestion();
+
+            if (!isApplicableToUser(q, user)) {
+                continue;
+            }
+
+            if (questionnaireQuestion.isObligatoire() && !answeredQuestionIds.contains(q.getId())) {
+                throw new IllegalArgumentException("La question obligatoire '" + q.getTexte() + "' n'a pas été renseignée");
             }
         }
 
         answerRepository.saveAll(answers);
 
-        if (bloquant) {
-            userQuestionnaire.setResultat(QuestionnaireResultat.NON_ELIGIBLE);
-            user.setEligibilityStatus("NON_ELIGIBLE");
-            user.setStatutPertinent(false);
-        } else {
-            userQuestionnaire.setResultat(QuestionnaireResultat.ELIGIBLE);
-            user.setEligibilityStatus("ELIGIBLE");
-            user.setStatutPertinent(true);
-        }
+        QuestionnaireResultat resultat = mapResult(maxBlocage);
+        userQuestionnaire.setResultat(resultat);
+        userQuestionnaire.setMotifResultat(motifs.isEmpty() ? null : String.join(" | ", motifs));
+
+        user.setEligibilityStatus(resultat.name());
+        user.setStatutPertinent(resultat == QuestionnaireResultat.ELIGIBLE);
 
         userRepository.save(user);
         userQuestionnaireRepository.save(userQuestionnaire);
@@ -202,34 +211,124 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
                 .toList();
     }
 
-    private boolean isBlockingAnswer(Question question, String answerValue) {
-        if (question.getTypeReponse() != QuestionTypeReponse.YES_NO
-                && question.getTypeReponse() != QuestionTypeReponse.SINGLE_CHOICE
-                && question.getTypeReponse() != QuestionTypeReponse.MULTIPLE_CHOICE) {
-            return false;
+    private EvaluationResult evaluateAnswer(Question question, String rawValue, User user) {
+        if (!isApplicableToUser(question, user)) {
+            return new EvaluationResult(NiveauBlocage.NONE, null);
         }
 
-        List<QuestionOption> options = questionOptionRepository.findByQuestionIdOrderByOrdreAsc(question.getId());
-        Set<String> userValues = parseAnswerValues(answerValue);
+        if (question.getTypeReponse() == QuestionTypeReponse.NUMBER) {
+            return evaluateNumeric(question, rawValue);
+        }
 
-        for (QuestionOption option : options) {
-            if (option.isBloquante() && userValues.contains(option.getValue())) {
-                return true;
+        if (question.getTypeReponse() == QuestionTypeReponse.YES_NO
+                || question.getTypeReponse() == QuestionTypeReponse.SINGLE_CHOICE
+                || question.getTypeReponse() == QuestionTypeReponse.MULTIPLE_CHOICE) {
+            return evaluateOptions(question, rawValue);
+        }
+
+        return new EvaluationResult(NiveauBlocage.NONE, null);
+    }
+
+    private EvaluationResult evaluateNumeric(Question question, String rawValue) {
+        double value;
+
+        try {
+            value = Double.parseDouble(rawValue.trim().replace(",", "."));
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Valeur numérique invalide pour la question : " + question.getTexte());
+        }
+
+        boolean belowMin = question.getMinNumericValue() != null && value < question.getMinNumericValue();
+        boolean aboveMax = question.getMaxNumericValue() != null && value > question.getMaxNumericValue();
+
+        if (belowMin || aboveMax) {
+            NiveauBlocage level = question.getOutOfRangeBlockingLevel();
+            if (level != NiveauBlocage.NONE) {
+                return new EvaluationResult(
+                        level,
+                        "Règle numérique non respectée pour : " + question.getTexte()
+                );
             }
         }
 
-        return false;
+        return new EvaluationResult(NiveauBlocage.NONE, null);
     }
 
-    private Set<String> parseAnswerValues(String value) {
-        if (value == null || value.isBlank()) {
+    private EvaluationResult evaluateOptions(Question question, String rawValue) {
+        List<QuestionOption> options = questionOptionRepository.findByQuestionIdOrderByOrdreAsc(question.getId());
+        Set<String> values = parseValues(rawValue);
+
+        NiveauBlocage max = NiveauBlocage.NONE;
+        List<String> motifs = new ArrayList<>();
+
+        for (QuestionOption option : options) {
+            if (!option.isActive()) {
+                continue;
+            }
+
+            if (values.contains(option.getValue()) && isMoreSevere(option.getNiveauBlocage(), max)) {
+                max = option.getNiveauBlocage();
+                if (option.getNiveauBlocage() != NiveauBlocage.NONE) {
+                    motifs.add(question.getTexte() + " -> " + option.getLabel());
+                }
+            }
+        }
+
+        return new EvaluationResult(
+                max,
+                motifs.isEmpty() ? null : String.join(", ", motifs)
+        );
+    }
+
+    private Set<String> parseValues(String rawValue) {
+        if (rawValue == null || rawValue.isBlank()) {
             return Set.of();
         }
 
-        return Arrays.stream(value.split(","))
+        return Arrays.stream(rawValue.split(","))
                 .map(String::trim)
                 .filter(v -> !v.isBlank())
                 .collect(Collectors.toSet());
+    }
+
+    private boolean isApplicableToUser(Question question, User user) {
+        if (question.getApplicableSex() == QuestionApplicableSex.ALL) {
+            return true;
+        }
+
+        if (user.getSexe() == null) {
+            return false;
+        }
+
+        if (question.getApplicableSex() == QuestionApplicableSex.FEMALE_ONLY) {
+            return user.getSexe() == Sexe.FEMME;
+        }
+
+        if (question.getApplicableSex() == QuestionApplicableSex.MALE_ONLY) {
+            return user.getSexe() == Sexe.HOMME;
+        }
+
+        return true;
+    }
+
+    private QuestionnaireResultat mapResult(NiveauBlocage niveauBlocage) {
+        return switch (niveauBlocage) {
+            case NONE -> QuestionnaireResultat.ELIGIBLE;
+            case TEMPORAIRE -> QuestionnaireResultat.NON_ELIGIBLE_TEMPORAIRE;
+            case DEFINITIF -> QuestionnaireResultat.NON_ELIGIBLE_DEFINITIF;
+        };
+    }
+
+    private boolean isMoreSevere(NiveauBlocage current, NiveauBlocage previous) {
+        return severity(current) > severity(previous);
+    }
+
+    private int severity(NiveauBlocage level) {
+        return switch (level) {
+            case NONE -> 0;
+            case TEMPORAIRE -> 1;
+            case DEFINITIF -> 2;
+        };
     }
 
     private QuestionnaireResponse toResponse(Questionnaire questionnaire) {
@@ -249,9 +348,14 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
 
         QuestionResponse questionResponse = QuestionResponse.builder()
                 .id(question.getId())
+                .code(question.getCode())
                 .texte(question.getTexte())
                 .typeReponse(question.getTypeReponse())
                 .aide(question.getAide())
+                .applicableSex(question.getApplicableSex())
+                .minNumericValue(question.getMinNumericValue())
+                .maxNumericValue(question.getMaxNumericValue())
+                .outOfRangeBlockingLevel(question.getOutOfRangeBlockingLevel())
                 .actif(question.isActif())
                 .options(
                         questionOptionRepository.findByQuestionIdOrderByOrdreAsc(question.getId())
@@ -261,7 +365,7 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
                                         .label(option.getLabel())
                                         .value(option.getValue())
                                         .ordre(option.getOrdre())
-                                        .bloquante(option.isBloquante())
+                                        .niveauBlocage(option.getNiveauBlocage())
                                         .active(option.isActive())
                                         .build())
                                 .toList()
@@ -285,6 +389,9 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
                 .questionnaireTitre(entity.getQuestionnaire().getTitre())
                 .dateSoumission(entity.getDateSoumission())
                 .resultat(entity.getResultat())
+                .motifResultat(entity.getMotifResultat())
                 .build();
     }
+
+    private record EvaluationResult(NiveauBlocage niveauBlocage, String motif) {}
 }

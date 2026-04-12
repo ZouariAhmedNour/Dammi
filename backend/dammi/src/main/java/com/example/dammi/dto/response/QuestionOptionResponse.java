@@ -1,5 +1,6 @@
 package com.example.dammi.dto.response;
 
+import com.example.dammi.entity.enums.NiveauBlocage;
 import lombok.Builder;
 import lombok.Data;
 
@@ -10,6 +11,6 @@ public class QuestionOptionResponse {
     private String label;
     private String value;
     private Integer ordre;
-    private boolean bloquante;
+    private NiveauBlocage niveauBlocage;
     private boolean active;
 }

@@ -1,6 +1,7 @@
 package com.example.dammi.dto.response;
 
 import com.example.dammi.entity.enums.Role;
+import com.example.dammi.entity.enums.Sexe;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -15,6 +16,7 @@ public class UserResponse {
     private String email;
     private String phone;
     private Role role;
+    private Sexe sexe;
     private LocalDate lastDonation;
     private String eligibilityStatus;
     private Boolean statutPertinent;

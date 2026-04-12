@@ -67,10 +67,15 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     private void apply(Question question, QuestionRequest request) {
+        question.setCode(request.getCode());
         question.setTexte(request.getTexte());
         question.setTypeReponse(request.getTypeReponse());
         question.setAide(request.getAide());
         question.setActif(request.isActif());
+        question.setApplicableSex(request.getApplicableSex());
+        question.setMinNumericValue(request.getMinNumericValue());
+        question.setMaxNumericValue(request.getMaxNumericValue());
+        question.setOutOfRangeBlockingLevel(request.getOutOfRangeBlockingLevel());
 
         if (question.getOptions() == null) {
             question.setOptions(new ArrayList<>());
@@ -92,7 +97,7 @@ public class QuestionServiceImpl implements QuestionService {
                         .label(optionRequest.getLabel())
                         .value(optionRequest.getValue())
                         .ordre(optionRequest.getOrdre() == null ? 0 : optionRequest.getOrdre())
-                        .bloquante(optionRequest.isBloquante())
+                        .niveauBlocage(optionRequest.getNiveauBlocage())
                         .active(optionRequest.isActive())
                         .question(question)
                         .build();
@@ -104,9 +109,14 @@ public class QuestionServiceImpl implements QuestionService {
     private QuestionResponse toResponse(Question question) {
         return QuestionResponse.builder()
                 .id(question.getId())
+                .code(question.getCode())
                 .texte(question.getTexte())
                 .typeReponse(question.getTypeReponse())
                 .aide(question.getAide())
+                .applicableSex(question.getApplicableSex())
+                .minNumericValue(question.getMinNumericValue())
+                .maxNumericValue(question.getMaxNumericValue())
+                .outOfRangeBlockingLevel(question.getOutOfRangeBlockingLevel())
                 .actif(question.isActif())
                 .options(
                         question.getOptions() == null
@@ -118,7 +128,7 @@ public class QuestionServiceImpl implements QuestionService {
                                         .label(option.getLabel())
                                         .value(option.getValue())
                                         .ordre(option.getOrdre())
-                                        .bloquante(option.isBloquante())
+                                        .niveauBlocage(option.getNiveauBlocage())
                                         .active(option.isActive())
                                         .build())
                                 .toList()

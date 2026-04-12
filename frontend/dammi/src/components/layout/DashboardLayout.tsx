@@ -19,7 +19,7 @@ const menuBySection: Record<SectionKey, MenuItem[]> = {
     { label: "Types de don", to: "/admin/types-don", icon: HeartHandshake },
     { label: "Types sanguins", to: "/admin/types-sanguins", icon: Droplets },
     { label: "Questions", to: "/admin/questions", icon: FileWarning },
-    { label: "Questionnaires", to: "/admin/questionnaires", icon: HeartHandshake }
+    { label: "Questionnaires", to: "/admin/questionnaires", icon: Shield }
   ],
   agent: [
     { label: "Dashboard", to: "/agent", icon: LayoutDashboard },

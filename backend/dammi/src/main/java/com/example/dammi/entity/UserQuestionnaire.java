@@ -25,6 +25,10 @@ public class UserQuestionnaire {
     @Column(length = 50, nullable = false)
     private QuestionnaireResultat resultat;
 
+    @Column(name = "motif_resultat", length = 1000)
+    private String motifResultat;
+
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

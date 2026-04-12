@@ -15,4 +15,5 @@ public class UserQuestionnaireResponse {
     private String questionnaireTitre;
     private LocalDateTime dateSoumission;
     private QuestionnaireResultat resultat;
+    private String motifResultat;
 }

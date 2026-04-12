@@ -1,6 +1,7 @@
 package com.example.dammi.entity;
 
 import com.example.dammi.entity.enums.Role;
+import com.example.dammi.entity.enums.Sexe;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -52,6 +53,10 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Role role;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    private Sexe sexe;
 
     private LocalDate lastDonation;
 

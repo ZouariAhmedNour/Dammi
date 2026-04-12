@@ -1,5 +1,6 @@
 package com.example.dammi.entity;
 
+import com.example.dammi.entity.enums.NiveauBlocage;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -31,9 +32,11 @@ public class QuestionOption {
     @Builder.Default
     private Integer ordre = 0;
 
-    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "niveau_blocage", nullable = false, length = 20)
     @Builder.Default
-    private boolean bloquante = false;
+    private NiveauBlocage niveauBlocage = NiveauBlocage.NONE;
+
 
     @Column(nullable = false)
     @Builder.Default

@@ -35,7 +35,7 @@ public class QuestionnaireController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('USER', 'AGENT', 'ADMIN')")
-    @Operation(summary = "Récupérer un questionnaire par ID")
+    @Operation(summary = "Récupérer un questionnaire")
     public ResponseEntity<QuestionnaireResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(service.getById(id));
     }

@@ -172,36 +172,64 @@ export type QuestionnaireType =
 export type QuestionnaireResultat =
   | "EN_ATTENTE"
   | "ELIGIBLE"
-  | "NON_ELIGIBLE";
+  | "NON_ELIGIBLE_TEMPORAIRE"
+  | "NON_ELIGIBLE_DEFINITIF";
+
+export type NiveauBlocage = "NONE" | "TEMPORAIRE" | "DEFINITIF";
+
+export type QuestionApplicableSex = "ALL" | "FEMALE_ONLY" | "MALE_ONLY";
+
+export type QuestionCode =
+  | "AGE"
+  | "POIDS"
+  | "TAILLE"
+  | "MALADIES"
+  | "ETAT_GENERAL"
+  | "MEDICAMENTS"
+  | "DROGUES_INJECTABLES"
+  | "ALCOOL"
+  | "ENCEINTE"
+  | "ACCOUCHEMENT_6_MOIS"
+  | "ALLAITEMENT";
 
 export interface QuestionOption {
   id: number;
   label: string;
   value: string;
   ordre: number;
-  bloquante: boolean;
+  niveauBlocage: NiveauBlocage;
   active: boolean;
 }
 
 export interface Question {
   id: number;
+  code?: QuestionCode;
   texte: string;
   typeReponse: QuestionTypeReponse;
   aide?: string;
+  applicableSex: QuestionApplicableSex;
+  minNumericValue?: number;
+  maxNumericValue?: number;
+  outOfRangeBlockingLevel: NiveauBlocage;
   actif: boolean;
   options: QuestionOption[];
 }
 
 export interface QuestionPayload {
+  code?: QuestionCode;
   texte: string;
   typeReponse: QuestionTypeReponse;
   aide?: string;
+  applicableSex: QuestionApplicableSex;
+  minNumericValue?: number;
+  maxNumericValue?: number;
+  outOfRangeBlockingLevel: NiveauBlocage;
   actif: boolean;
   options?: {
     label: string;
     value: string;
     ordre?: number;
-    bloquante?: boolean;
+    niveauBlocage?: NiveauBlocage;
     active?: boolean;
   }[];
 }

@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import type { Question, QuestionPayload, QuestionTypeReponse } from "../../types";
+import type {
+  NiveauBlocage,
+  Question,
+  QuestionApplicableSex,
+  QuestionCode,
+  QuestionPayload,
+  QuestionTypeReponse
+} from "../../types";
 import { questionService } from "../../services/question.service";
 import { getApiErrorMessage } from "../../lib/helpers";
 import { PageHeader } from "../../components/ui/PageHeader";
@@ -13,40 +20,77 @@ type OptionForm = {
   label: string;
   value: string;
   ordre: number;
-  bloquante: boolean;
+  niveauBlocage: NiveauBlocage;
   active: boolean;
 };
 
 type FormState = {
+  code: QuestionCode | "";
   texte: string;
   typeReponse: QuestionTypeReponse;
   aide: string;
+  applicableSex: QuestionApplicableSex;
+  minNumericValue: string;
+  maxNumericValue: string;
+  outOfRangeBlockingLevel: NiveauBlocage;
   actif: boolean;
   options: OptionForm[];
 };
+
+const choiceTypes: QuestionTypeReponse[] = [
+  "YES_NO",
+  "SINGLE_CHOICE",
+  "MULTIPLE_CHOICE"
+];
+
+const questionCodeOptions: Array<{ label: string; value: QuestionCode | "" }> = [
+  { label: "Aucun code", value: "" },
+  { label: "AGE", value: "AGE" },
+  { label: "POIDS", value: "POIDS" },
+  { label: "TAILLE", value: "TAILLE" },
+  { label: "MALADIES", value: "MALADIES" },
+  { label: "ETAT_GENERAL", value: "ETAT_GENERAL" },
+  { label: "MEDICAMENTS", value: "MEDICAMENTS" },
+  { label: "DROGUES_INJECTABLES", value: "DROGUES_INJECTABLES" },
+  { label: "ALCOOL", value: "ALCOOL" },
+  { label: "ENCEINTE", value: "ENCEINTE" },
+  { label: "ACCOUCHEMENT_6_MOIS", value: "ACCOUCHEMENT_6_MOIS" },
+  { label: "ALLAITEMENT", value: "ALLAITEMENT" }
+];
 
 const emptyOption = (ordre = 1): OptionForm => ({
   label: "",
   value: "",
   ordre,
-  bloquante: false,
+  niveauBlocage: "NONE",
   active: true
 });
 
-const yesNoOptions = (): OptionForm[] => [
-  { label: "Oui", value: "OUI", ordre: 1, bloquante: true, active: true },
-  { label: "Non", value: "NON", ordre: 2, bloquante: false, active: true }
+const defaultYesNoOptions = (): OptionForm[] => [
+  { label: "Oui", value: "OUI", ordre: 1, niveauBlocage: "NONE", active: true },
+  { label: "Non", value: "NON", ordre: 2, niveauBlocage: "NONE", active: true }
 ];
 
 const initialForm: FormState = {
+  code: "",
   texte: "",
   typeReponse: "YES_NO",
   aide: "",
+  applicableSex: "ALL",
+  minNumericValue: "",
+  maxNumericValue: "",
+  outOfRangeBlockingLevel: "NONE",
   actif: true,
-  options: yesNoOptions()
+  options: defaultYesNoOptions()
 };
 
-const choiceTypes: QuestionTypeReponse[] = ["YES_NO", "SINGLE_CHOICE", "MULTIPLE_CHOICE"];
+function toNumberOrUndefined(value: string): number | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+
+  const parsed = Number(trimmed.replace(",", "."));
+  return Number.isNaN(parsed) ? undefined : parsed;
+}
 
 export function AdminQuestionsPage() {
   const [items, setItems] = useState<Question[]>([]);
@@ -68,7 +112,8 @@ export function AdminQuestionsPage() {
       setError("");
 
       try {
-        await loadQuestions();
+        const data = await questionService.getAll();
+        setItems(data);
       } catch (err) {
         setError(getApiErrorMessage(err));
       } finally {
@@ -89,7 +134,11 @@ export function AdminQuestionsPage() {
   function handleTypeChange(value: QuestionTypeReponse) {
     setForm((prev) => {
       if (value === "YES_NO") {
-        return { ...prev, typeReponse: value, options: yesNoOptions() };
+        return {
+          ...prev,
+          typeReponse: value,
+          options: defaultYesNoOptions()
+        };
       }
 
       if (value === "SINGLE_CHOICE" || value === "MULTIPLE_CHOICE") {
@@ -133,16 +182,21 @@ export function AdminQuestionsPage() {
 
   function mapPayload(state: FormState): QuestionPayload {
     return {
+      code: state.code || undefined,
       texte: state.texte,
       typeReponse: state.typeReponse,
       aide: state.aide || undefined,
+      applicableSex: state.applicableSex,
+      minNumericValue: toNumberOrUndefined(state.minNumericValue),
+      maxNumericValue: toNumberOrUndefined(state.maxNumericValue),
+      outOfRangeBlockingLevel: state.outOfRangeBlockingLevel,
       actif: state.actif,
       options: choiceTypes.includes(state.typeReponse)
         ? state.options.map((option) => ({
             label: option.label,
             value: option.value,
             ordre: option.ordre,
-            bloquante: option.bloquante,
+            niveauBlocage: option.niveauBlocage,
             active: option.active
           }))
         : []
@@ -179,15 +233,26 @@ export function AdminQuestionsPage() {
     setEditingId(question.id);
     setSuccess("");
     setForm({
+      code: question.code || "",
       texte: question.texte,
       typeReponse: question.typeReponse,
       aide: question.aide || "",
+      applicableSex: question.applicableSex || "ALL",
+      minNumericValue:
+        question.minNumericValue !== undefined && question.minNumericValue !== null
+          ? String(question.minNumericValue)
+          : "",
+      maxNumericValue:
+        question.maxNumericValue !== undefined && question.maxNumericValue !== null
+          ? String(question.maxNumericValue)
+          : "",
+      outOfRangeBlockingLevel: question.outOfRangeBlockingLevel || "NONE",
       actif: question.actif,
       options: (question.options || []).map((option) => ({
         label: option.label,
         value: option.value,
         ordre: option.ordre,
-        bloquante: option.bloquante,
+        niveauBlocage: option.niveauBlocage,
         active: option.active
       }))
     });
@@ -211,7 +276,7 @@ export function AdminQuestionsPage() {
     <div className="stack-lg">
       <PageHeader
         title="Banque de questions"
-        description="Créer les questions, définir leur type de réponse et les options bloquantes."
+        description="Créer et configurer manuellement chaque question du questionnaire."
         actions={
           <Button variant="secondary" type="button" onClick={resetForm}>
             Nouvelle question
@@ -224,9 +289,49 @@ export function AdminQuestionsPage() {
 
       <Card
         title={editingId ? "Modifier une question" : "Ajouter une question"}
-        subtitle="Les questions YES/NO, SINGLE_CHOICE et MULTIPLE_CHOICE utilisent des options."
+        subtitle="Les questions NUMBER utilisent min/max. Les questions de choix utilisent des options avec niveau de blocage."
       >
         <form onSubmit={handleSubmit} className="stack">
+          <div className="grid-two">
+            <div>
+              <label className="field__label">Code métier</label>
+              <select
+                className="input"
+                value={form.code}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    code: e.target.value as QuestionCode | ""
+                  }))
+                }
+              >
+                {questionCodeOptions.map((option) => (
+                  <option key={option.label} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="field__label">Applicable pour</label>
+              <select
+                className="input"
+                value={form.applicableSex}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    applicableSex: e.target.value as QuestionApplicableSex
+                  }))
+                }
+              >
+                <option value="ALL">Tout le monde</option>
+                <option value="FEMALE_ONLY">Femmes seulement</option>
+                <option value="MALE_ONLY">Hommes seulement</option>
+              </select>
+            </div>
+          </div>
+
           <TextAreaField
             label="Texte de la question"
             rows={3}
@@ -258,14 +363,60 @@ export function AdminQuestionsPage() {
             />
           </div>
 
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input
-              type="checkbox"
-              checked={form.actif}
-              onChange={(e) => setForm((prev) => ({ ...prev, actif: e.target.checked }))}
-            />
-            <span>Question active</span>
-          </label>
+          {form.typeReponse === "NUMBER" ? (
+            <div className="grid-two">
+              <InputField
+                label="Valeur minimale"
+                type="number"
+                value={form.minNumericValue}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, minNumericValue: e.target.value }))
+                }
+              />
+
+              <InputField
+                label="Valeur maximale"
+                type="number"
+                value={form.maxNumericValue}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, maxNumericValue: e.target.value }))
+                }
+              />
+            </div>
+          ) : null}
+
+          <div className="grid-two">
+            <div>
+              <label className="field__label">Blocage si hors intervalle</label>
+              <select
+                className="input"
+                value={form.outOfRangeBlockingLevel}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    outOfRangeBlockingLevel: e.target.value as NiveauBlocage
+                  }))
+                }
+              >
+                <option value="NONE">Aucun</option>
+                <option value="TEMPORAIRE">Temporaire</option>
+                <option value="DEFINITIF">Définitif</option>
+              </select>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "end", paddingBottom: 12 }}>
+              <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input
+                  type="checkbox"
+                  checked={form.actif}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, actif: e.target.checked }))
+                  }
+                />
+                <span>Question active</span>
+              </label>
+            </div>
+          </div>
 
           {choiceTypes.includes(form.typeReponse) ? (
             <Card
@@ -305,28 +456,32 @@ export function AdminQuestionsPage() {
                         }
                       />
 
-                      <div style={{ display: "flex", gap: 20, alignItems: "end", paddingBottom: 12 }}>
-                        <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                          <input
-                            type="checkbox"
-                            checked={option.bloquante}
-                            onChange={(e) =>
-                              updateOption(index, { bloquante: e.target.checked })
-                            }
-                          />
-                          <span>Réponse bloquante</span>
-                        </label>
-
-                        <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                          <input
-                            type="checkbox"
-                            checked={option.active}
-                            onChange={(e) => updateOption(index, { active: e.target.checked })}
-                          />
-                          <span>Option active</span>
-                        </label>
+                      <div>
+                        <label className="field__label">Niveau de blocage</label>
+                        <select
+                          className="input"
+                          value={option.niveauBlocage}
+                          onChange={(e) =>
+                            updateOption(index, {
+                              niveauBlocage: e.target.value as NiveauBlocage
+                            })
+                          }
+                        >
+                          <option value="NONE">Aucun</option>
+                          <option value="TEMPORAIRE">Temporaire</option>
+                          <option value="DEFINITIF">Définitif</option>
+                        </select>
                       </div>
                     </div>
+
+                    <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <input
+                        type="checkbox"
+                        checked={option.active}
+                        onChange={(e) => updateOption(index, { active: e.target.checked })}
+                      />
+                      <span>Option active</span>
+                    </label>
 
                     {form.typeReponse !== "YES_NO" ? (
                       <Button
@@ -365,8 +520,16 @@ export function AdminQuestionsPage() {
         <DataTable
           data={items}
           columns={[
+            {
+              header: "Code",
+              render: (row) => row.code || "-"
+            },
             { header: "Texte", accessor: "texte" },
             { header: "Type", render: (row) => row.typeReponse },
+            {
+              header: "Applicabilité",
+              render: (row) => row.applicableSex
+            },
             { header: "Actif", render: (row) => (row.actif ? "Oui" : "Non") },
             {
               header: "Options",

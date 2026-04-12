@@ -1,5 +1,6 @@
 package com.example.dammi.dto.request;
 
+import com.example.dammi.entity.enums.NiveauBlocage;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
@@ -12,6 +13,6 @@ public class QuestionOptionRequest {
     private String value;
 
     private Integer ordre;
-    private boolean bloquante;
+    private NiveauBlocage niveauBlocage = NiveauBlocage.NONE;
     private boolean active = true;
 }

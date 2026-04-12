@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import type { Question, Questionnaire, QuestionnairePayload, QuestionnaireType } from "../../types";
+import type {
+  Question,
+  Questionnaire,
+  QuestionnairePayload,
+  QuestionnaireType
+} from "../../types";
 import { questionnaireService } from "../../services/questionnaire.service";
 import { questionService } from "../../services/question.service";
 import { getApiErrorMessage } from "../../lib/helpers";
@@ -58,7 +63,13 @@ export function AdminQuestionnairesPage() {
       setError("");
 
       try {
-        await loadAll();
+        const [questionnairesData, questionsData] = await Promise.all([
+          questionnaireService.getAll(),
+          questionService.getAll()
+        ]);
+
+        setItems(questionnairesData);
+        setQuestionBank(questionsData);
       } catch (err) {
         setError(getApiErrorMessage(err));
       } finally {
@@ -121,6 +132,7 @@ export function AdminQuestionnairesPage() {
       type: item.type,
       actif: item.actif
     });
+
     setSelectedQuestions(
       (item.questions || []).map((q) => ({
         questionId: q.questionId,
@@ -128,7 +140,9 @@ export function AdminQuestionnairesPage() {
         obligatoire: q.obligatoire
       }))
     );
+
     setSuccess("");
+    setError("");
   }
 
   async function handleDelete(id: number) {
@@ -137,9 +151,11 @@ export function AdminQuestionnairesPage() {
 
     try {
       await questionnaireService.remove(id);
+
       if (editingId === id) {
         resetForm();
       }
+
       await loadAll();
     } catch (err) {
       setError(getApiErrorMessage(err));
@@ -165,7 +181,10 @@ export function AdminQuestionnairesPage() {
     });
   }
 
-  function updateAssignedQuestion(questionId: number, patch: Partial<AssignedQuestionForm>) {
+  function updateAssignedQuestion(
+    questionId: number,
+    patch: Partial<AssignedQuestionForm>
+  ) {
     setSelectedQuestions((prev) =>
       prev.map((item) =>
         item.questionId === questionId ? { ...item, ...patch } : item
@@ -207,7 +226,10 @@ export function AdminQuestionnairesPage() {
     }
   }
 
-  const selectedCount = useMemo(() => selectedQuestions.length, [selectedQuestions]);
+  const selectedCount = useMemo(
+    () => selectedQuestions.length,
+    [selectedQuestions]
+  );
 
   if (loading) return <Loader />;
 
@@ -235,7 +257,10 @@ export function AdminQuestionnairesPage() {
             <InputField
               label="Titre"
               value={form.titre}
-              onChange={(e) => setForm((prev) => ({ ...prev, titre: e.target.value }))}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, titre: e.target.value }))
+              }
+              required
             />
 
             <TextAreaField
@@ -316,61 +341,66 @@ export function AdminQuestionnairesPage() {
           }
         >
           <div className="stack">
-            {questionBank.map((question) => {
-              const selected = selectedQuestions.find(
-                (item) => item.questionId === question.id
-              );
+            {questionBank
+              .filter((question) => question.actif)
+              .map((question) => {
+                const selected = selectedQuestions.find(
+                  (item) => item.questionId === question.id
+                );
 
-              return (
-                <div
-                  key={question.id}
-                  className="card"
-                  style={{ padding: 16, display: "grid", gap: 12 }}
-                >
-                  <label style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                    <input
-                      type="checkbox"
-                      checked={!!selected}
-                      onChange={() => toggleQuestion(question.id)}
-                      disabled={!editingId}
-                    />
-                    <strong>{question.texte}</strong>
-                  </label>
-
-                  <div className="muted small">{question.typeReponse}</div>
-
-                  {selected ? (
-                    <div className="grid-two">
-                      <InputField
-                        label="Ordre"
-                        type="number"
-                        value={String(selected.ordre)}
-                        onChange={(e) =>
-                          updateAssignedQuestion(question.id, {
-                            ordre: Number(e.target.value) || 1
-                          })
-                        }
+                return (
+                  <div
+                    key={question.id}
+                    className="card"
+                    style={{ padding: 16, display: "grid", gap: 12 }}
+                  >
+                    <label style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                      <input
+                        type="checkbox"
+                        checked={!!selected}
+                        onChange={() => toggleQuestion(question.id)}
+                        disabled={!editingId}
                       />
+                      <strong>{question.texte}</strong>
+                    </label>
 
-                      <div style={{ display: "flex", alignItems: "end", paddingBottom: 12 }}>
-                        <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                          <input
-                            type="checkbox"
-                            checked={selected.obligatoire}
-                            onChange={(e) =>
-                              updateAssignedQuestion(question.id, {
-                                obligatoire: e.target.checked
-                              })
-                            }
-                          />
-                          <span>Question obligatoire</span>
-                        </label>
-                      </div>
+                    <div className="muted small">
+                      {question.code ? `${question.code} • ` : ""}
+                      {question.typeReponse}
                     </div>
-                  ) : null}
-                </div>
-              );
-            })}
+
+                    {selected ? (
+                      <div className="grid-two">
+                        <InputField
+                          label="Ordre"
+                          type="number"
+                          value={String(selected.ordre)}
+                          onChange={(e) =>
+                            updateAssignedQuestion(question.id, {
+                              ordre: Number(e.target.value) || 1
+                            })
+                          }
+                        />
+
+                        <div style={{ display: "flex", alignItems: "end", paddingBottom: 12 }}>
+                          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                            <input
+                              type="checkbox"
+                              checked={selected.obligatoire}
+                              onChange={(e) =>
+                                updateAssignedQuestion(question.id, {
+                                  obligatoire: e.target.checked
+                                })
+                              }
+                            />
+                            <span>Question obligatoire</span>
+                          </label>
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
           </div>
         </Card>
       </div>
@@ -387,10 +417,18 @@ export function AdminQuestionnairesPage() {
               header: "Actions",
               render: (row) => (
                 <div className="inline-actions">
-                  <Button type="button" variant="secondary" onClick={() => handleEdit(row)}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => handleEdit(row)}
+                  >
                     Configurer
                   </Button>
-                  <Button type="button" variant="danger" onClick={() => handleDelete(row.id)}>
+                  <Button
+                    type="button"
+                    variant="danger"
+                    onClick={() => handleDelete(row.id)}
+                  >
                     Supprimer
                   </Button>
                 </div>
