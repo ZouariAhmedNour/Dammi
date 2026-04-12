@@ -1,9 +1,13 @@
 package com.example.dammi.entity;
 
 
+import com.example.dammi.entity.enums.QuestionTypeReponse;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "question")
@@ -21,7 +25,18 @@ public class Question {
     @Column(nullable = false, length = 500)
     private String texte;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "questionnaire_id", nullable = false)
-    private Questionnaire questionnaire;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type_reponse", nullable = false, length = 30)
+    private QuestionTypeReponse typeReponse;
+
+    @Column(length = 255)
+    private String aide;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean actif = true;
+
+    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<QuestionOption> options = new ArrayList<>();
 }

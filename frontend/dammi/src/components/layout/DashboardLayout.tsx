@@ -17,7 +17,9 @@ const menuBySection: Record<SectionKey, MenuItem[]> = {
     { label: "Utilisateurs", to: "/admin/users", icon: Users },
     { label: "Points de collecte", to: "/admin/points", icon: MapPinned },
     { label: "Types de don", to: "/admin/types-don", icon: HeartHandshake },
-    { label: "Types sanguins", to: "/admin/types-sanguins", icon: Droplets }
+    { label: "Types sanguins", to: "/admin/types-sanguins", icon: Droplets },
+    { label: "Questions", to: "/admin/questions", icon: FileWarning },
+    { label: "Questionnaires", to: "/admin/questionnaires", icon: HeartHandshake }
   ],
   agent: [
     { label: "Dashboard", to: "/agent", icon: LayoutDashboard },

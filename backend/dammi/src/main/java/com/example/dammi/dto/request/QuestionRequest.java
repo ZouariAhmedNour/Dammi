@@ -7,7 +7,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class QuestionCreateRequest {
+public class QuestionRequest   {
     @NotBlank
     @Size(max = 500)
     private String texte;
@@ -17,6 +17,8 @@ public class QuestionCreateRequest {
 
     @Size(max = 255)
     private String aide;
+
+    private boolean actif = true;
 
     private List<QuestionOptionRequest> options;
 }

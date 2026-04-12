@@ -1,10 +1,9 @@
 package com.example.dammi.controller;
 
 
-import com.example.dammi.dto.request.QuestionnaireRequest;
 import com.example.dammi.dto.request.UserQuestionnaireRequest;
-import com.example.dammi.entity.Questionnaire;
-import com.example.dammi.entity.UserQuestionnaire;
+import com.example.dammi.dto.response.QuestionnaireResponse;
+import com.example.dammi.dto.response.UserQuestionnaireResponse;
 import com.example.dammi.service.QuestionnaireService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -21,44 +20,37 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/questionnaires")
 @RequiredArgsConstructor
-@Tag(name = "Questionnaires", description = "Questionnaires d'éligibilité")
+@Tag(name = "Questionnaires", description = "Questionnaires côté utilisateur")
 @SecurityRequirement(name = "BearerAuth")
 public class QuestionnaireController {
 
     private final QuestionnaireService service;
 
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Créer un questionnaire")
-    public ResponseEntity<Questionnaire> creer(@Valid @RequestBody QuestionnaireRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.creerQuestionnaire(req));
-    }
-
     @GetMapping
     @PreAuthorize("hasAnyRole('USER', 'AGENT', 'ADMIN')")
-    @Operation(summary = "Liste tous les questionnaires")
-    public ResponseEntity<List<Questionnaire>> getAll() {
+    @Operation(summary = "Lister les questionnaires")
+    public ResponseEntity<List<QuestionnaireResponse>> getAll() {
         return ResponseEntity.ok(service.getAll());
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('USER', 'AGENT', 'ADMIN')")
-    @Operation(summary = "Récupère un questionnaire par ID")
-    public ResponseEntity<Questionnaire> getById(@PathVariable Long id) {
+    @Operation(summary = "Récupérer un questionnaire par ID")
+    public ResponseEntity<QuestionnaireResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(service.getById(id));
     }
 
     @PostMapping("/soumettre")
     @PreAuthorize("hasAnyRole('USER', 'AGENT', 'ADMIN')")
-    @Operation(summary = "Soumettre un questionnaire rempli")
-    public ResponseEntity<UserQuestionnaire> soumettre(@Valid @RequestBody UserQuestionnaireRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.soumettre(req));
+    @Operation(summary = "Soumettre un questionnaire")
+    public ResponseEntity<UserQuestionnaireResponse> soumettre(@Valid @RequestBody UserQuestionnaireRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.soumettre(request));
     }
 
     @GetMapping("/user/{userId}")
     @PreAuthorize("hasAnyRole('USER', 'AGENT', 'ADMIN')")
-    @Operation(summary = "Soumissions d'un utilisateur")
-    public ResponseEntity<List<UserQuestionnaire>> getByUser(@PathVariable Long userId) {
+    @Operation(summary = "Lister les soumissions d'un utilisateur")
+    public ResponseEntity<List<UserQuestionnaireResponse>> getByUser(@PathVariable Long userId) {
         return ResponseEntity.ok(service.getSubmissionsByUser(userId));
     }
 }

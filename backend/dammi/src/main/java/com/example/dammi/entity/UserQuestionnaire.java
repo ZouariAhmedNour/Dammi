@@ -1,5 +1,6 @@
 package com.example.dammi.entity;
 
+import com.example.dammi.entity.enums.QuestionnaireResultat;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,8 +21,9 @@ public class UserQuestionnaire {
     @Column(name = "date_soumission")
     private LocalDateTime dateSoumission;
 
-    @Column(length = 50)
-    private String resultat;
+    @Enumerated(EnumType.STRING)
+    @Column(length = 50, nullable = false)
+    private QuestionnaireResultat resultat;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

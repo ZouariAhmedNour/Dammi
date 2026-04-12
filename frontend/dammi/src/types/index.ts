@@ -155,3 +155,86 @@ export interface DemandePayload {
   typeSanguinId?: number;
   userId?: number;
 }
+
+export type QuestionTypeReponse =
+  | "YES_NO"
+  | "SINGLE_CHOICE"
+  | "MULTIPLE_CHOICE"
+  | "TEXT"
+  | "NUMBER"
+  | "DATE";
+
+export type QuestionnaireType =
+  | "ELIGIBILITE_DONNEUR"
+  | "PRE_DON"
+  | "POST_DON";
+
+export type QuestionnaireResultat =
+  | "EN_ATTENTE"
+  | "ELIGIBLE"
+  | "NON_ELIGIBLE";
+
+export interface QuestionOption {
+  id: number;
+  label: string;
+  value: string;
+  ordre: number;
+  bloquante: boolean;
+  active: boolean;
+}
+
+export interface Question {
+  id: number;
+  texte: string;
+  typeReponse: QuestionTypeReponse;
+  aide?: string;
+  actif: boolean;
+  options: QuestionOption[];
+}
+
+export interface QuestionPayload {
+  texte: string;
+  typeReponse: QuestionTypeReponse;
+  aide?: string;
+  actif: boolean;
+  options?: {
+    label: string;
+    value: string;
+    ordre?: number;
+    bloquante?: boolean;
+    active?: boolean;
+  }[];
+}
+
+export interface QuestionnaireQuestionItem {
+  id: number;
+  questionId: number;
+  ordre: number;
+  obligatoire: boolean;
+  question: Question;
+}
+
+export interface Questionnaire {
+  id: number;
+  titre: string;
+  description?: string;
+  type: QuestionnaireType;
+  actif: boolean;
+  createdAt?: string;
+  questions: QuestionnaireQuestionItem[];
+}
+
+export interface QuestionnairePayload {
+  titre: string;
+  description?: string;
+  type: QuestionnaireType;
+  actif: boolean;
+}
+
+export interface QuestionnaireAssignQuestionsPayload {
+  questions: {
+    questionId: number;
+    ordre: number;
+    obligatoire?: boolean;
+  }[];
+}

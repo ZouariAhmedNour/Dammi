@@ -5,7 +5,8 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 
 @Data
-public class QuestionnaireCreateRequest {
+public class QuestionnaireRequest  {
+
     @NotBlank
     @Size(max = 200)
     private String titre;
@@ -15,4 +16,6 @@ public class QuestionnaireCreateRequest {
 
     @NotNull
     private QuestionnaireType type;
+
+    private boolean actif = true;
 }
