@@ -18,7 +18,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: '/login',
-        builder: (context, state) => const LoginScreen(),
+        builder: (context, state) {
+          final showRegisteredDialog =
+              state.uri.queryParameters['registered'] == '1';
+
+          return LoginScreen(showRegisteredDialog: showRegisteredDialog);
+        },
       ),
       GoRoute(
         path: '/register',

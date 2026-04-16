@@ -1,26 +1,47 @@
 package com.example.dammi.dto.request;
 
-import com.example.dammi.entity.enums.Role;
-import jakarta.validation.constraints.*;
+import com.example.dammi.entity.enums.Sexe;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
+
+import java.time.LocalDate;
 
 @Data
 public class RegisterRequest {
-        @NotBlank
-        @Size(min = 2, max = 50)
-        private String prenom;
 
-        @NotBlank @Size(min = 2, max = 50)
-        private String nom;
+    @NotBlank(message = "Le prénom est obligatoire")
+    @Size(min = 2, max = 50, message = "Le prénom doit contenir entre 2 et 50 caractères")
+    private String prenom;
 
-        @NotBlank @Email
-        private String email;
+    @NotBlank(message = "Le nom est obligatoire")
+    @Size(min = 2, max = 50, message = "Le nom doit contenir entre 2 et 50 caractères")
+    private String nom;
 
-        @NotBlank @Size(min = 8, message = "Le mot de passe doit contenir au moins 8 caractères")
-        private String password;
+    @NotBlank(message = "L'email est obligatoire")
+    @Email(message = "L'email n'est pas valide")
+    private String email;
 
-        @Pattern(regexp = "^[+]?[0-9]{8,15}$", message = "Numéro de téléphone invalide")
-        private String phone;
+    @NotBlank(message = "Le mot de passe est obligatoire")
+    @Size(min = 8, message = "Le mot de passe doit contenir au moins 8 caractères")
+    private String password;
 
-        private Role role = Role.USER;
+    // Tunisie : 8 chiffres, avec ou sans +216
+    @NotBlank(message = "Le numéro de téléphone est obligatoire")
+    @Pattern(
+            regexp = "^(\\+216)?[0-9]{8}$",
+            message = "Numéro tunisien invalide"
+    )
+    private String phone;
+
+    @NotNull(message = "Le sexe est obligatoire")
+    private Sexe sexe;
+
+    // null si jamais donné
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate lastDonation;
 }

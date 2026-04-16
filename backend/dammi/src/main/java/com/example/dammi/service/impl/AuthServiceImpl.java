@@ -4,6 +4,7 @@ import com.example.dammi.dto.request.LoginRequest;
 import com.example.dammi.dto.request.RegisterRequest;
 import com.example.dammi.dto.response.AuthResponse;
 import com.example.dammi.entity.User;
+import com.example.dammi.entity.enums.Role;
 import com.example.dammi.exception.BadRequestException;
 import com.example.dammi.repository.UserRepository;
 import com.example.dammi.security.JwtTokenProvider;
@@ -38,7 +39,9 @@ public class AuthServiceImpl implements AuthService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .phone(request.getPhone())
-                .role(request.getRole())
+                .sexe(request.getSexe())
+                .lastDonation(request.getLastDonation())
+                .role(Role.USER)
                 .eligibilityStatus("ELIGIBLE")
                 .statutPertinent(true)
                 .build();
@@ -52,6 +55,8 @@ public class AuthServiceImpl implements AuthService {
                 .email(user.getEmail())
                 .prenom(user.getPrenom())
                 .nom(user.getNom())
+                .sexe(user.getSexe())
+                .lastDonation(user.getLastDonation())
                 .role(user.getRole())
                 .build();
     }

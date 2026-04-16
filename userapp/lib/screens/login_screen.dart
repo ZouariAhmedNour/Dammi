@@ -8,7 +8,12 @@ import 'package:userapp/providers/auth_provider.dart';
 import 'package:userapp/theme/app_colors.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+  final bool showRegisteredDialog;
+
+  const LoginScreen({
+    super.key,
+    this.showRegisteredDialog = false,
+  });
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -18,6 +23,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+
+  bool _dialogShown = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (widget.showRegisteredDialog && !_dialogShown) {
+      _dialogShown = true;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('Compte créé'),
+            content: const Text(
+              'Votre compte a été créé avec succès. Connectez-vous maintenant.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -46,6 +82,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  String? _validateEmail(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Email requis';
+    }
+
+    final emailRegex = RegExp(
+      r'^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$',
+    );
+
+    if (!emailRegex.hasMatch(value.trim())) {
+      return 'Format email invalide';
+    }
+
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
@@ -53,7 +105,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 430),
@@ -88,7 +140,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const Gap(28),
                     Container(
-                      padding: const EdgeInsets.all(22),
+                      padding: const EdgeInsets.all(18),
                       decoration: BoxDecoration(
                         color: AppColors.background,
                         borderRadius: BorderRadius.circular(30),
@@ -109,43 +161,38 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             controller: _emailCtrl,
                             prefixIcon: Icons.mail_outline_rounded,
                             keyboardType: TextInputType.emailAddress,
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return 'Email requis';
-                              }
-                              return null;
-                            },
+                            validator: _validateEmail,
                           ),
                           const Gap(18),
                           Row(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    const Expanded(
-      child: Text(
-        'MOT DE PASSE',
-        style: TextStyle(
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.4,
-          color: AppColors.textSecondary,
-        ),
-      ),
-    ),
-    const SizedBox(width: 8),
-    Flexible(
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: Text(
-          'Mot de passe oublié ?',
-          textAlign: TextAlign.right,
-          style: const TextStyle(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    ),
-  ],
-),
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Expanded(
+                                child: Text(
+                                  'MOT DE PASSE',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.4,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Text(
+                                    'Mot de passe oublié ?',
+                                    textAlign: TextAlign.right,
+                                    style: const TextStyle(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                           const Gap(10),
                           AppTextField(
                             label: '',
@@ -168,77 +215,77 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             onPressed: _submit,
                           ),
                           const Gap(26),
-                       Wrap(
-  alignment: WrapAlignment.center,
-  crossAxisAlignment: WrapCrossAlignment.center,
-  spacing: 4,
-  children: [
-    const Text(
-      'Pas encore de compte ?',
-      style: TextStyle(
-        color: AppColors.textSecondary,
-        fontSize: 16,
-      ),
-      textAlign: TextAlign.center,
-    ),
-    GestureDetector(
-      onTap: () => context.go('/register'),
-      child: const Text(
-        'Créer un compte',
-        style: TextStyle(
-          color: AppColors.primaryDark,
-          fontWeight: FontWeight.w800,
-          fontSize: 16,
-        ),
-        textAlign: TextAlign.center,
-      ),
-    ),
-  ],
-),
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 4,
+                            children: [
+                              const Text(
+                                'Pas encore de compte ?',
+                                style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 16,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              GestureDetector(
+                                onTap: () => context.go('/register'),
+                                child: const Text(
+                                  'Créer un compte',
+                                  style: TextStyle(
+                                    color: AppColors.primaryDark,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 16,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
                     const Gap(28),
                     const Wrap(
-  alignment: WrapAlignment.center,
-  crossAxisAlignment: WrapCrossAlignment.center,
-  spacing: 10,
-  runSpacing: 8,
-  children: [
-    Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.shield_outlined, size: 18, color: AppColors.textSecondary),
-        SizedBox(width: 6),
-        Text(
-          'SÉCURISÉ',
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ],
-    ),
-    Text(
-      '|',
-      style: TextStyle(color: AppColors.textMuted),
-    ),
-    Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.verified_user_outlined, size: 18, color: AppColors.textSecondary),
-        SizedBox(width: 6),
-        Text(
-          'DONNÉES PROTÉGÉES',
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ],
-    ),
-  ],
-),
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 10,
+                      runSpacing: 8,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.shield_outlined, size: 18, color: AppColors.textSecondary),
+                            SizedBox(width: 6),
+                            Text(
+                              'SÉCURISÉ',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          '|',
+                          style: TextStyle(color: AppColors.textMuted),
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.verified_user_outlined, size: 18, color: AppColors.textSecondary),
+                            SizedBox(width: 6),
+                            Text(
+                              'DONNÉES PROTÉGÉES',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                     const Gap(16),
                     const Text(
                       'Dammi respecte la confidentialité de vos données médicales et se conforme aux standards de santé.',

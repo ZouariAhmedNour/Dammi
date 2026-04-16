@@ -1,8 +1,9 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:userapp/api/api_client.dart';
 import 'package:userapp/models/auth_response.dart';
-import 'package:userapp/models/blood_type.dart';
 
 class AuthApi {
   final Dio _dio;
@@ -14,79 +15,128 @@ class AuthApi {
     required String password,
   }) async {
     try {
+      if (kDebugMode) {
+        debugPrint('AUTH API -> LOGIN START');
+        debugPrint('email: ${email.trim()}');
+      }
+
       final response = await _dio.post(
         '/auth/login',
         data: {
-          'email': email,
+          'email': email.trim(),
           'password': password,
         },
       );
+
+      if (kDebugMode) {
+        debugPrint('AUTH API -> LOGIN SUCCESS');
+        debugPrint('response raw: ${response.data}');
+      }
 
       return AuthResponse.fromJson(
         Map<String, dynamic>.from(response.data as Map),
       );
     } on DioException catch (e) {
+      if (kDebugMode) {
+        debugPrint('AUTH API -> LOGIN ERROR');
+        debugPrint(_extractMessage(e));
+      }
       throw Exception(_extractMessage(e));
+    } catch (_) {
+      throw Exception('Erreur inattendue lors de la connexion');
     }
   }
 
   Future<AuthResponse> register({
-    required String fullName,
+    required String prenom,
+    required String nom,
     required String email,
     required String password,
-    BloodType? bloodType,
+    required String phone,
+    required String sexe,
+    DateTime? lastDonation,
   }) async {
     try {
-      final (prenom, nom) = _splitFullName(fullName);
-
       final payload = <String, dynamic>{
-        'prenom': prenom,
-        'nom': nom,
-        'email': email,
+        'prenom': prenom.trim(),
+        'nom': nom.trim(),
+        'email': email.trim(),
         'password': password,
+        'phone': phone.trim(),
+        'sexe': sexe,
+        'lastDonation': lastDonation != null
+            ? DateFormat('yyyy-MM-dd').format(lastDonation)
+            : null,
       };
 
-      // IMPORTANT :
-      // Comme tu ne m'as pas encore donné la classe RegisterRequest exacte,
-      // je n'envoie PAS le groupe sanguin ici pour éviter un 400.
-      // Quand tu m'enverras RegisterRequest, je te brancherai ça exactement.
+      if (kDebugMode) {
+        debugPrint('AUTH API -> REGISTER START');
+        debugPrint('payload: {');
+        debugPrint('  prenom: ${payload['prenom']},');
+        debugPrint('  nom: ${payload['nom']},');
+        debugPrint('  email: ${payload['email']},');
+        debugPrint('  phone: ${payload['phone']},');
+        debugPrint('  sexe: ${payload['sexe']},');
+        debugPrint('  lastDonation: ${payload['lastDonation']},');
+        debugPrint('  password: ***');
+        debugPrint('}');
+      }
 
       final response = await _dio.post(
         '/auth/register',
         data: payload,
       );
 
+      if (kDebugMode) {
+        debugPrint('AUTH API -> REGISTER SUCCESS');
+        debugPrint('response raw: ${response.data}');
+      }
+
       return AuthResponse.fromJson(
         Map<String, dynamic>.from(response.data as Map),
       );
     } on DioException catch (e) {
+      if (kDebugMode) {
+        debugPrint('AUTH API -> REGISTER ERROR');
+        debugPrint(_extractMessage(e));
+      }
       throw Exception(_extractMessage(e));
+    } catch (_) {
+      throw Exception("Erreur inattendue lors de l'inscription");
     }
-  }
-
-  (String, String) _splitFullName(String fullName) {
-    final parts = fullName.trim().split(RegExp(r'\s+'));
-    if (parts.isEmpty || parts.first.isEmpty) {
-      return ('Utilisateur', 'Dammi');
-    }
-    if (parts.length == 1) {
-      return (parts.first, 'Dammi');
-    }
-    return (parts.first, parts.sublist(1).join(' '));
   }
 
   String _extractMessage(DioException e) {
     final data = e.response?.data;
 
-    if (data is Map && data['message'] != null) {
-      return data['message'].toString();
+    if (data is Map<String, dynamic>) {
+      if (data['message'] != null) {
+        return data['message'].toString();
+      }
+
+      if (data['error'] != null) {
+        return data['error'].toString();
+      }
     }
 
-    if (data is Map && data['error'] != null) {
-      return data['error'].toString();
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+        return 'Délai de connexion dépassé';
+      case DioExceptionType.sendTimeout:
+        return "Délai d'envoi dépassé";
+      case DioExceptionType.receiveTimeout:
+        return 'Délai de réponse dépassé';
+      case DioExceptionType.connectionError:
+        return 'Impossible de se connecter au serveur';
+      case DioExceptionType.badCertificate:
+        return 'Certificat serveur invalide';
+      case DioExceptionType.cancel:
+        return 'Requête annulée';
+      case DioExceptionType.unknown:
+        return 'Erreur réseau inconnue';
+      case DioExceptionType.badResponse:
+        return 'Réponse serveur invalide';
     }
-
-    return e.message ?? 'Une erreur réseau est survenue';
   }
 }
 

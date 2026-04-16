@@ -4,7 +4,6 @@ import 'package:userapp/api/api_client.dart';
 import 'package:userapp/api/auth_api.dart';
 import 'package:userapp/api/storage_service.dart';
 import 'package:userapp/models/app_user.dart';
-import 'package:userapp/models/blood_type.dart';
 
 enum AuthStatus {
   initial,
@@ -88,48 +87,45 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  Future<bool> register({
-    required String fullName,
-    required String email,
-    required String password,
-    BloodType? bloodType,
-  }) async {
-    try {
-      errorMessage = null;
-      status = AuthStatus.loading;
-      notifyListeners();
+ Future<bool> register({
+  required String prenom,
+  required String nom,
+  required String email,
+  required String password,
+  required String phone,
+  required String sexe,
+  DateTime? lastDonation,
+}) async {
+  try {
+    errorMessage = null;
+    status = AuthStatus.loading;
+    notifyListeners();
 
-      final response = await _authApi.register(
-        fullName: fullName,
-        email: email,
-        password: password,
-        bloodType: bloodType,
-      );
+    await _authApi.register(
+      prenom: prenom,
+      nom: nom,
+      email: email,
+      password: password,
+      phone: phone,
+      sexe: sexe,
+      lastDonation: lastDonation,
+    );
 
-      token = response.token;
-      user = response.user ??
-          AppUser(
-            id: null,
-            prenom: fullName.split(' ').first,
-            nom: fullName.split(' ').skip(1).join(' '),
-            email: email,
-          );
+    // IMPORTANT :
+    // on ne connecte pas automatiquement l'utilisateur
+    token = null;
+    user = null;
+    status = AuthStatus.unauthenticated;
+    notifyListeners();
 
-      await _storage.saveSession(
-        token: token!,
-        user: user,
-      );
-
-      status = AuthStatus.authenticated;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      errorMessage = e.toString().replaceFirst('Exception: ', '');
-      status = AuthStatus.unauthenticated;
-      notifyListeners();
-      return false;
-    }
+    return true;
+  } catch (e) {
+    errorMessage = e.toString().replaceFirst('Exception: ', '');
+    status = AuthStatus.unauthenticated;
+    notifyListeners();
+    return false;
   }
+}
 
   Future<void> logout() async {
     await _storage.clearSession();

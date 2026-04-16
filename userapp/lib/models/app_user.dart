@@ -1,5 +1,3 @@
-
-
 import 'dart:convert';
 
 class AppUser {
@@ -7,6 +5,8 @@ class AppUser {
   final String prenom;
   final String nom;
   final String email;
+  final String? phone;
+  final String? sexe;
   final String? avatar;
   final String? role;
   final String? eligibilityStatus;
@@ -18,6 +18,8 @@ class AppUser {
     required this.prenom,
     required this.nom,
     required this.email,
+    this.phone,
+    this.sexe,
     this.avatar,
     this.role,
     this.eligibilityStatus,
@@ -36,6 +38,8 @@ class AppUser {
       prenom: (json['prenom'] ?? json['firstName'] ?? '').toString(),
       nom: (json['nom'] ?? json['lastName'] ?? '').toString(),
       email: (json['email'] ?? '').toString(),
+      phone: json['phone']?.toString(),
+      sexe: json['sexe']?.toString(),
       avatar: json['avatar']?.toString(),
       role: json['role']?.toString(),
       eligibilityStatus: json['eligibilityStatus']?.toString(),
@@ -55,6 +59,8 @@ class AppUser {
       'prenom': prenom,
       'nom': nom,
       'email': email,
+      'phone': phone,
+      'sexe': sexe,
       'avatar': avatar,
       'role': role,
       'eligibilityStatus': eligibilityStatus,
