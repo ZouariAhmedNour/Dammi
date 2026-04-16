@@ -22,7 +22,7 @@ public class CarteDonneurController {
     private final CarteDonneurService service;
 
     @PostMapping("/generer/{userId}")
-    @PreAuthorize("hasAnyRole('AGENT', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('AGENT', 'ADMIN','USER')")
     @Operation(summary = "Générer une carte donneur pour un utilisateur")
     public ResponseEntity<CarteDonneur> generer(@PathVariable Long userId) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.generateCard(userId));

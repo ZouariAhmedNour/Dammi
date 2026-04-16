@@ -1,0 +1,85 @@
+
+
+import 'dart:convert';
+
+class AppUser {
+  final int? id;
+  final String prenom;
+  final String nom;
+  final String email;
+  final String? avatar;
+  final String? role;
+  final String? eligibilityStatus;
+  final bool? statutPertinent;
+  final DateTime? lastDonation;
+
+  const AppUser({
+    required this.id,
+    required this.prenom,
+    required this.nom,
+    required this.email,
+    this.avatar,
+    this.role,
+    this.eligibilityStatus,
+    this.statutPertinent,
+    this.lastDonation,
+  });
+
+  String get fullName {
+    final name = '$prenom $nom'.trim();
+    return name.isEmpty ? 'Utilisateur' : name;
+  }
+
+  factory AppUser.fromJson(Map<String, dynamic> json) {
+    return AppUser(
+      id: _toInt(json['id']),
+      prenom: (json['prenom'] ?? json['firstName'] ?? '').toString(),
+      nom: (json['nom'] ?? json['lastName'] ?? '').toString(),
+      email: (json['email'] ?? '').toString(),
+      avatar: json['avatar']?.toString(),
+      role: json['role']?.toString(),
+      eligibilityStatus: json['eligibilityStatus']?.toString(),
+      statutPertinent: _toBool(json['statutPertinent']),
+      lastDonation: _parseDate(json['lastDonation']),
+    );
+  }
+
+  factory AppUser.fromRawJson(String source) =>
+      AppUser.fromJson(jsonDecode(source) as Map<String, dynamic>);
+
+  String toRawJson() => jsonEncode(toJson());
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'prenom': prenom,
+      'nom': nom,
+      'email': email,
+      'avatar': avatar,
+      'role': role,
+      'eligibilityStatus': eligibilityStatus,
+      'statutPertinent': statutPertinent,
+      'lastDonation': lastDonation?.toIso8601String(),
+    };
+  }
+
+  static int? _toInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    return int.tryParse(value.toString());
+  }
+
+  static bool? _toBool(dynamic value) {
+    if (value == null) return null;
+    if (value is bool) return value;
+    final text = value.toString().toLowerCase();
+    if (text == 'true') return true;
+    if (text == 'false') return false;
+    return null;
+  }
+
+  static DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    return DateTime.tryParse(value.toString());
+  }
+}
