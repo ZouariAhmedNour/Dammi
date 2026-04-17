@@ -703,57 +703,70 @@ class _SlotsGrid extends StatelessWidget {
 
 class _StepHeader extends StatelessWidget {
   final int currentStep;
+  final ValueChanged<int>? onStepTapped;
 
-  const _StepHeader({required this.currentStep});
+  const _StepHeader({
+    required this.currentStep,
+    this.onStepTapped,
+  });
 
   @override
   Widget build(BuildContext context) {
     Widget dot(int step, String label) {
       final active = step == currentStep;
       final done = step < currentStep;
+      final clickable = onStepTapped != null && step < currentStep;
 
-      return Expanded(
-        child: Column(
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: active || done
-                      ? AppColors.primary
-                      : AppColors.surfaceDark,
-                  child: Text(
-                    '$step',
-                    style: TextStyle(
-                      color: active || done ? Colors.white : AppColors.textSecondary,
-                      fontWeight: FontWeight.w800,
-                    ),
+      final content = Column(
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: active || done
+                    ? AppColors.primary
+                    : AppColors.surfaceDark,
+                child: Text(
+                  '$step',
+                  style: TextStyle(
+                    color: active || done ? Colors.white : AppColors.textSecondary,
+                    fontWeight: FontWeight.w800,
                   ),
-                ),
-                if (step != 3)
-                  Expanded(
-                    child: Container(
-                      height: 2,
-                      margin: const EdgeInsets.symmetric(horizontal: 8),
-                      color: AppColors.border,
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  color: active ? AppColors.primaryDark : AppColors.textMuted,
-                  letterSpacing: 1.2,
                 ),
               ),
+              if (step != 3)
+                Expanded(
+                  child: Container(
+                    height: 2,
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    color: AppColors.border,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                color: active ? AppColors.primaryDark : AppColors.textMuted,
+                letterSpacing: 1.2,
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
+      );
+
+      return Expanded(
+        child: clickable
+            ? InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => onStepTapped!(step),
+                child: content,
+              )
+            : content,
       );
     }
 

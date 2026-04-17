@@ -139,7 +139,13 @@ class _QuestionnaireEligibiliteScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const _QuestionnaireSteps(),
+                  _QuestionnaireSteps(
+  onStepTapped: (step) {
+    if (step == 1 && flow.pointCollecteId != null) {
+      context.go('/appointment/new/${flow.pointCollecteId}');
+    }
+  },
+),
                   const SizedBox(height: 26),
                   Text(
                     questionnaire.titre,
@@ -342,51 +348,67 @@ class _QuestionnaireEligibiliteScreenState
 }
 
 class _QuestionnaireSteps extends StatelessWidget {
-  const _QuestionnaireSteps();
+  final ValueChanged<int>? onStepTapped;
+
+  const _QuestionnaireSteps({
+    super.key,
+    this.onStepTapped,
+  });
 
   @override
   Widget build(BuildContext context) {
     Widget dot(int step, String label, bool active, bool done) {
-      return Expanded(
-        child: Column(
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: active || done ? AppColors.primary : AppColors.surfaceDark,
-                  child: Text(
-                    '$step',
-                    style: TextStyle(
-                      color: active || done ? Colors.white : AppColors.textSecondary,
-                      fontWeight: FontWeight.w800,
-                    ),
+      final clickable = done && onStepTapped != null;
+
+      final content = Column(
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor:
+                    active || done ? AppColors.primary : AppColors.surfaceDark,
+                child: Text(
+                  '$step',
+                  style: TextStyle(
+                    color: active || done ? Colors.white : AppColors.textSecondary,
+                    fontWeight: FontWeight.w800,
                   ),
-                ),
-                if (step != 3)
-                  Expanded(
-                    child: Container(
-                      height: 2,
-                      margin: const EdgeInsets.symmetric(horizontal: 8),
-                      color: AppColors.border,
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  color: active ? AppColors.primaryDark : AppColors.textMuted,
-                  letterSpacing: 1.1,
                 ),
               ),
+              if (step != 3)
+                Expanded(
+                  child: Container(
+                    height: 2,
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    color: AppColors.border,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                color: active ? AppColors.primaryDark : AppColors.textMuted,
+                letterSpacing: 1.1,
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
+      );
+
+      return Expanded(
+        child: clickable
+            ? InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => onStepTapped!(step),
+                child: content,
+              )
+            : content,
       );
     }
 

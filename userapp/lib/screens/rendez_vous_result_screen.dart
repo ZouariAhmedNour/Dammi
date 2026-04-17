@@ -124,7 +124,7 @@ class RendezVousResultScreen extends StatelessWidget {
                 width: double.infinity,
                 height: 58,
                 child: ElevatedButton(
-                  onPressed: () => context.go('/history'),
+                  onPressed: () => context.go('/historyRDV'),
                   child: const Text('Voir mes rendez-vous'),
                 ),
               )
