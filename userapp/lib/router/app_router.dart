@@ -1,13 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:userapp/models/appointment_models.dart';
 import 'package:userapp/providers/auth_provider.dart';
-import 'package:userapp/screens/history_screen.dart';
+import 'package:userapp/screens/history_rdv_screen.dart';
 import 'package:userapp/screens/home_screen.dart';
 import 'package:userapp/screens/login_screen.dart';
 import 'package:userapp/screens/main_shell.dart';
 import 'package:userapp/screens/map_screen.dart';
+import 'package:userapp/screens/new_rendez_vous_screen.dart';
 import 'package:userapp/screens/profile_screen.dart';
+import 'package:userapp/screens/questionnaire_eligibilite_screen.dart';
 import 'package:userapp/screens/register_screen.dart';
+import 'package:userapp/screens/rendez_vous_result_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final auth = ref.watch(authControllerProvider);
@@ -29,6 +33,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
       ),
+       GoRoute(
+        path: '/appointment/new/:pointId',
+        builder: (context, state) {
+          final pointId = int.parse(state.pathParameters['pointId']!);
+          return NewRendezVousScreen(pointId: pointId);
+        },
+      ),
+      GoRoute(
+        path: '/appointment/questionnaire',
+        builder: (context, state) => const QuestionnaireEligibiliteScreen(),
+      ),
+      GoRoute(
+        path: '/appointment/result',
+        builder: (context, state) {
+          final args = state.extra as AppointmentResultArgs;
+          return RendezVousResultScreen(args: args);
+        },
+      ),
+
+      
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),
         routes: [
@@ -41,8 +65,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const MapScreen(),
           ),
           GoRoute(
-            path: '/history',
-            builder: (context, state) => const HistoryScreen(),
+            path: '/historyRDV',
+            builder: (context, state) => const HistoryRDVScreen(),
           ),
           GoRoute(
             path: '/profile',

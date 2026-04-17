@@ -14,7 +14,7 @@ class MainShell extends StatelessWidget {
     final location = GoRouter.of(context).routeInformationProvider.value.uri.toString();
 
     if (location.startsWith('/map')) return 1;
-    if (location.startsWith('/history')) return 2;
+    if (location.startsWith('/historyRDV')) return 2;
     if (location.startsWith('/profile')) return 3;
     return 0;
   }
@@ -28,7 +28,7 @@ class MainShell extends StatelessWidget {
         context.go('/map');
         break;
       case 2:
-        context.go('/history');
+        context.go('/historyRDV');
         break;
       case 3:
         context.go('/profile');

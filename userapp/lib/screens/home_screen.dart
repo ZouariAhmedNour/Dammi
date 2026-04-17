@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 import 'package:userapp/components/app_button.dart';
 import 'package:userapp/components/stat_card.dart';
 import 'package:userapp/components/urgent_need_card.dart';
@@ -92,7 +93,9 @@ class HomeScreen extends ConsumerWidget {
                 const Gap(18),
                 AppButton(
                   label: 'Prendre rendez-vous',
-                  onPressed: () {},
+                  onPressed: () {
+                     context.go('/map');
+                  },
                   backgroundColor: AppColors.background,
                   foregroundColor: AppColors.primaryDark,
                 ),
@@ -220,7 +223,9 @@ class HomeScreen extends ConsumerWidget {
                     radius: 28,
                     backgroundColor: AppColors.primary,
                     child: IconButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        context.go('/map');
+                      },
                       icon: const Icon(Icons.arrow_forward_rounded, color: Colors.white),
                     ),
                   ),
