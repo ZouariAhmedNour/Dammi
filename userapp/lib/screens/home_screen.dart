@@ -6,7 +6,7 @@ import 'package:userapp/components/app_button.dart';
 import 'package:userapp/components/stat_card.dart';
 import 'package:userapp/components/urgent_need_card.dart';
 import 'package:userapp/providers/auth_provider.dart';
-import 'package:userapp/providers/donor_card_provider.dart';
+import 'package:userapp/providers/user_provider.dart';
 import 'package:userapp/theme/app_colors.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -15,13 +15,14 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authControllerProvider);
-    final donorCardAsync = ref.watch(donorCardProvider);
 
     final status = auth.user?.eligibilityStatus?.trim().toUpperCase();
     final eligible = status == 'ELIGIBLE';
 
     final bloodGroup = auth.user?.typeSanguinAboGroup ?? '—';
     final firstName = auth.user?.prenom ?? 'donneur';
+
+    final isPertinent = auth.user?.statutPertinent ?? false;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(18, 14, 18, 24),
@@ -34,21 +35,105 @@ class HomeScreen extends ConsumerWidget {
               const Icon(
                 Icons.water_drop_rounded,
                 color: AppColors.primary,
-                size: 32,
+                size: 28,
               ),
               const SizedBox(width: 8),
+
               const Text(
                 'Dammi',
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: FontWeight.w800,
                   color: AppColors.primaryDark,
                 ),
               ),
+
               const Spacer(),
+
+              /// TOGGLE MODERNE
+              GestureDetector(
+                onTap: () async {
+                  final userId = auth.user?.id;
+                  if (userId == null) return;
+
+                  final newValue = !isPertinent;
+
+                  await ref
+                      .read(statutPertinentProvider.notifier)
+                      .toggle(userId, newValue);
+
+                  ref
+                      .read(authControllerProvider)
+                      .updatePertinent(newValue);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isPertinent
+                        ? AppColors.success.withOpacity(.12)
+                        : AppColors.warning.withOpacity(.12),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isPertinent
+                          ? AppColors.success.withOpacity(.3)
+                          : AppColors.warning.withOpacity(.3),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        width: 18,
+                        height: 18,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isPertinent
+                              ? AppColors.success
+                              : AppColors.warning,
+                        ),
+                        child: Icon(
+                          isPertinent
+                              ? Icons.check_rounded
+                              : Icons.close_rounded,
+                          size: 12,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        isPertinent
+                            ? 'Pertinent'
+                            : 'Non pertinent',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: isPertinent
+                              ? AppColors.success
+                              : AppColors.warning,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 8),
+
               IconButton(
                 onPressed: () {},
-                icon: const Icon(Icons.notifications_none_rounded),
+                constraints: const BoxConstraints(),
+                padding: EdgeInsets.zero,
+                icon: const Icon(
+                  Icons.notifications_none_rounded,
+                  color: AppColors.primaryDark,
+                  size: 22,
+                ),
               ),
             ],
           ),
@@ -62,8 +147,14 @@ class HomeScreen extends ConsumerWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: eligible
-                    ? [AppColors.primaryDark, AppColors.primary]
-                    : [Colors.grey.shade700, Colors.grey.shade500],
+                    ? [
+                        AppColors.primaryDark,
+                        AppColors.primary,
+                      ]
+                    : [
+                        Colors.grey.shade700,
+                        Colors.grey.shade500,
+                      ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -72,7 +163,6 @@ class HomeScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                /// BADGE STATUT
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 14,
@@ -94,14 +184,13 @@ class HomeScreen extends ConsumerWidget {
 
                 const Gap(18),
 
-                /// TITRE
                 Text(
                   eligible
                       ? 'Vous êtes éligible\npour donner !'
                       : 'Vous n’êtes pas encore\néligible',
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 28,
+                    fontSize: 26,
                     fontWeight: FontWeight.w800,
                     height: 1.15,
                   ),
@@ -109,26 +198,25 @@ class HomeScreen extends ConsumerWidget {
 
                 const Gap(14),
 
-                /// MESSAGE
                 Text(
                   eligible
-                      ? 'Votre générosité sauve des vies, $firstName. '
-                            'Prenez rendez-vous dès aujourd’hui.'
-                      : 'Merci $firstName. Vous pourrez reprendre '
-                            'les rendez-vous après 2 mois depuis votre dernier don.',
+                      ? 'Votre générosité sauve des vies, $firstName.'
+                      : 'Merci $firstName. Reprenez après 2 mois.',
                   style: TextStyle(
                     color: Colors.white.withOpacity(.85),
-                    fontSize: 18,
-                    height: 1.5,
+                    fontSize: 16,
+                    height: 1.4,
                   ),
                 ),
 
                 const Gap(18),
 
-                /// BOUTON RDV
                 AppButton(
                   label: 'Prendre rendez-vous',
-                  onPressed: eligible ? () => context.go('/map') : null,
+                  fontSize: 14,
+                  height: 46,
+                  onPressed:
+                      eligible ? () => context.go('/map') : null,
                   backgroundColor: eligible
                       ? AppColors.background
                       : Colors.grey.shade300,
@@ -150,64 +238,6 @@ class HomeScreen extends ConsumerWidget {
             valueColor: AppColors.primaryDark,
           ),
 
-          const Gap(16),
-
-          /// STATS DONS
-          donorCardAsync.when(
-            data: (card) {
-              final totalDonations = card?.nbDon ?? 0;
-              final livesSaved = totalDonations * 3;
-
-              return Column(
-                children: [
-                  StatCard(
-                    title: 'Total des dons',
-                    value: '$totalDonations',
-                    subtitle: '+2 cette année',
-                    backgroundColor: AppColors.primaryLight,
-                    valueColor: AppColors.primaryDark,
-                  ),
-                  const Gap(16),
-                  StatCard(
-                    title: 'Vies sauvées',
-                    value: '$livesSaved',
-                    subtitle: 'Chaque don peut sauver jusqu’à 3 vies.',
-                  ),
-                ],
-              );
-            },
-            loading: () => Column(
-              children: const [
-                StatCard(
-                  title: 'Total des dons',
-                  value: '...',
-                  subtitle: 'Chargement',
-                ),
-                Gap(16),
-                StatCard(
-                  title: 'Vies sauvées',
-                  value: '...',
-                  subtitle: 'Chargement',
-                ),
-              ],
-            ),
-            error: (_, __) => Column(
-              children: const [
-                StatCard(
-                  title: 'Total des dons',
-                  value: '0',
-                  subtitle: 'Aucun don enregistré',
-                ),
-                Gap(16),
-                StatCard(
-                  title: 'Vies sauvées',
-                  value: '0',
-                  subtitle: 'Commencez votre premier don',
-                ),
-              ],
-            ),
-          ),
-
           const Gap(24),
 
           /// ACTIONS
@@ -216,6 +246,8 @@ class HomeScreen extends ConsumerWidget {
               Expanded(
                 child: AppButton(
                   label: 'Nouvelle demande',
+                  fontSize: 13,
+                  height: 46,
                   onPressed: () {
                     context.go('/request/new');
                   },
@@ -225,6 +257,8 @@ class HomeScreen extends ConsumerWidget {
               Expanded(
                 child: AppButton(
                   label: 'Mes demandes',
+                  fontSize: 13,
+                  height: 46,
                   onPressed: () {
                     context.go('/request/history');
                   },
@@ -240,19 +274,25 @@ class HomeScreen extends ConsumerWidget {
           /// COLLECTE
           const Text(
             'Collecte de Sang',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+            ),
           ),
 
           const Gap(14),
 
           Container(
             width: double.infinity,
-            height: 240,
+            height: 220,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(24),
               gradient: const LinearGradient(
-                colors: [Color(0xFF989590), Color(0xFFD7D2C7)],
+                colors: [
+                  Color(0xFF989590),
+                  Color(0xFFD7D2C7),
+                ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -262,8 +302,8 @@ class HomeScreen extends ConsumerWidget {
                 Align(
                   alignment: Alignment.center,
                   child: Container(
-                    width: 170,
-                    height: 170,
+                    width: 150,
+                    height: 150,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.white.withOpacity(.75),
@@ -271,7 +311,7 @@ class HomeScreen extends ConsumerWidget {
                     child: const Icon(
                       Icons.location_on_rounded,
                       color: AppColors.primary,
-                      size: 38,
+                      size: 36,
                     ),
                   ),
                 ),
@@ -279,19 +319,22 @@ class HomeScreen extends ConsumerWidget {
                   left: 0,
                   bottom: 0,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Trouver un point de collecte',
+                        'Trouver un point',
                         style: TextStyle(
                           fontWeight: FontWeight.w800,
-                          fontSize: 22,
+                          fontSize: 20,
                         ),
                       ),
                       SizedBox(height: 4),
                       Text(
-                        '3 centres ouverts à proximité',
-                        style: TextStyle(color: AppColors.textSecondary),
+                        '3 centres ouverts',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
@@ -300,13 +343,19 @@ class HomeScreen extends ConsumerWidget {
                   right: 0,
                   bottom: 0,
                   child: CircleAvatar(
-                    radius: 28,
-                    backgroundColor: eligible ? AppColors.primary : Colors.grey,
+                    radius: 24,
+                    backgroundColor: eligible
+                        ? AppColors.primary
+                        : Colors.grey,
                     child: IconButton(
-                      onPressed: eligible ? () => context.go('/map') : null,
+                      onPressed:
+                          eligible
+                              ? () => context.go('/map')
+                              : null,
                       icon: const Icon(
                         Icons.arrow_forward_rounded,
                         color: Colors.white,
+                        size: 20,
                       ),
                     ),
                   ),
@@ -323,7 +372,10 @@ class HomeScreen extends ConsumerWidget {
               Expanded(
                 child: Text(
                   'Urgences Vitales',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
               Text(

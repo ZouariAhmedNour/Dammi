@@ -8,6 +8,10 @@ class AppButton extends StatelessWidget {
   final Color? backgroundColor;
   final Color? foregroundColor;
 
+  /// NOUVEAU
+  final double fontSize;
+  final double height;
+
   const AppButton({
     super.key,
     required this.label,
@@ -16,34 +20,55 @@ class AppButton extends StatelessWidget {
     this.trailingIcon,
     this.backgroundColor,
     this.foregroundColor,
+    this.fontSize = 14,
+    this.height = 46,
   });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 58,
+      height: height,
       child: ElevatedButton(
         onPressed: loading ? null : onPressed,
-        style: backgroundColor != null || foregroundColor != null
-            ? ElevatedButton.styleFrom(
-                backgroundColor: backgroundColor,
-                foregroundColor: foregroundColor,
-              )
-            : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: backgroundColor,
+          foregroundColor: foregroundColor,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          elevation: 0,
+        ),
         child: loading
             ? const SizedBox(
-                height: 22,
-                width: 22,
-                child: CircularProgressIndicator(strokeWidth: 2),
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                ),
               )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(label),
+                  Flexible(
+                    child: Text(
+                      label,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: fontSize,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
                   if (trailingIcon != null) ...[
-                    const SizedBox(width: 10),
-                    Icon(trailingIcon),
+                    const SizedBox(width: 8),
+                    Icon(
+                      trailingIcon,
+                      size: 18,
+                    ),
                   ],
                 ],
               ),

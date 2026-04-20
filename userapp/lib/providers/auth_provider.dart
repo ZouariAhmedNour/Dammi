@@ -130,6 +130,33 @@ class AuthController extends ChangeNotifier {
   }
 }
 
+void updatePertinent(bool value) async {
+  if (user == null) return;
+
+  user = User(
+    id: user!.id,
+    prenom: user!.prenom,
+    nom: user!.nom,
+    email: user!.email,
+    phone: user!.phone,
+    sexe: user!.sexe,
+    avatar: user!.avatar,
+    role: user!.role,
+    eligibilityStatus: user!.eligibilityStatus,
+    statutPertinent: value,
+    lastDonation: user!.lastDonation,
+    typeSanguinId: user!.typeSanguinId,
+    typeSanguinAboGroup: user!.typeSanguinAboGroup,
+  );
+
+  await _storage.saveSession(
+    token: token!,
+    user: user,
+  );
+
+  notifyListeners();
+}
+
   Future<void> logout() async {
     await _storage.clearSession();
     token = null;
@@ -139,6 +166,8 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 }
+
+
 
 final authControllerProvider = ChangeNotifierProvider<AuthController>((ref) {
   return AuthController(

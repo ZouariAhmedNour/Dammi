@@ -32,6 +32,7 @@ public class SecurityConfig {
 
     private static final String[] PUBLIC_URLS = {
             "/api/auth/**",
+            "/api/users/**",
             "/api/types-sanguin/**",
             "/api/points-collecte/**",
             "/api-docs/**",
@@ -49,8 +50,10 @@ public class SecurityConfig {
                         .requestMatchers(PUBLIC_URLS).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/types-don/**").permitAll()
                         // Admin uniquement
-                        .requestMatchers("/api/users/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.PATCH, "/api/users/*/statut")
+                                .authenticated()
+//                                .requestMatchers("/api/users/**").hasRole("ADMIN")
+                                .requestMatchers("/api/users/**").hasAnyRole("ADMIN", "USER")
                         // Agent + Admin
                         .requestMatchers("/api/stocks/**").hasAnyRole("ADMIN", "AGENT")
                         .requestMatchers(HttpMethod.PUT, "/api/dons/*/statut").hasAnyRole("ADMIN", "AGENT")

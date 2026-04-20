@@ -64,4 +64,13 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
+    @Override
+    @Transactional
+    public Boolean updateStatutPertinent(Long id, Boolean statutPertinent) {
+        User user = findUser(id);
+        user.setStatutPertinent(statutPertinent);
+        userRepository.save(user);
+        return user.getStatutPertinent();
+    }
+
 }

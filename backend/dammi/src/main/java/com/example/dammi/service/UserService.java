@@ -9,4 +9,5 @@ public interface UserService {
     UserResponse getUserById(Long id);
     UserResponse getUserByEmail(String email);
     void deleteUser(Long id);
+    Boolean updateStatutPertinent(Long id, Boolean statutPertinent);
 }

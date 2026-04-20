@@ -23,24 +23,35 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Operation(summary = "Liste tous les utilisateurs")
     public ResponseEntity<List<UserResponse>> getAll() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Operation(summary = "Récupère un utilisateur par ID")
     public ResponseEntity<UserResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Supprime un utilisateur")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/statut")
+    @Operation(summary = "Modifier le statut pertinent")
+    public ResponseEntity<Boolean> updateStatut(
+            @PathVariable Long id,
+            @RequestParam Boolean value
+    ) {
+        return ResponseEntity.ok(
+                userService.updateStatutPertinent(id, value)
+        );
     }
 }
