@@ -55,6 +55,7 @@ class AuthApi {
     required String phone,
     required String sexe,
     DateTime? lastDonation,
+    required int typeSanguinId,
   }) async {
     try {
       final payload = <String, dynamic>{
@@ -67,6 +68,7 @@ class AuthApi {
         'lastDonation': lastDonation != null
             ? DateFormat('yyyy-MM-dd').format(lastDonation)
             : null,
+        'typeSanguinId': typeSanguinId,
       };
 
       if (kDebugMode) {
@@ -78,6 +80,8 @@ class AuthApi {
         debugPrint('  phone: ${payload['phone']},');
         debugPrint('  sexe: ${payload['sexe']},');
         debugPrint('  lastDonation: ${payload['lastDonation']},');
+        debugPrint('  typeSanguinId: ${payload['typeSanguinId']},');
+        debugPrint('  typeSanguinAboGroup: ${payload['typeSanguinAboGroup']},');
         debugPrint('  password: ***');
         debugPrint('}');
       }

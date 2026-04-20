@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-class AppUser {
+class User {
   final int? id;
   final String prenom;
   final String nom;
@@ -12,8 +12,10 @@ class AppUser {
   final String? eligibilityStatus;
   final bool? statutPertinent;
   final DateTime? lastDonation;
+  final int? typeSanguinId;
+  final String? typeSanguinAboGroup;
 
-  const AppUser({
+  const User({
     required this.id,
     required this.prenom,
     required this.nom,
@@ -25,6 +27,8 @@ class AppUser {
     this.eligibilityStatus,
     this.statutPertinent,
     this.lastDonation,
+    this.typeSanguinId,
+    this.typeSanguinAboGroup,
   });
 
   String get fullName {
@@ -32,8 +36,8 @@ class AppUser {
     return name.isEmpty ? 'Utilisateur' : name;
   }
 
-  factory AppUser.fromJson(Map<String, dynamic> json) {
-    return AppUser(
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
       id: _toInt(json['id']),
       prenom: (json['prenom'] ?? json['firstName'] ?? '').toString(),
       nom: (json['nom'] ?? json['lastName'] ?? '').toString(),
@@ -45,11 +49,13 @@ class AppUser {
       eligibilityStatus: json['eligibilityStatus']?.toString(),
       statutPertinent: _toBool(json['statutPertinent']),
       lastDonation: _parseDate(json['lastDonation']),
+      typeSanguinId: _toInt(json['typeSanguinId']),
+      typeSanguinAboGroup: json['typeSanguinAboGroup']?.toString(),
     );
   }
 
-  factory AppUser.fromRawJson(String source) =>
-      AppUser.fromJson(jsonDecode(source) as Map<String, dynamic>);
+  factory User.fromRawJson(String source) =>
+      User.fromJson(jsonDecode(source) as Map<String, dynamic>);
 
   String toRawJson() => jsonEncode(toJson());
 
@@ -66,6 +72,8 @@ class AppUser {
       'eligibilityStatus': eligibilityStatus,
       'statutPertinent': statutPertinent,
       'lastDonation': lastDonation?.toIso8601String(),
+      'typeSanguinId': typeSanguinId,
+      'typeSanguinAboGroup': typeSanguinAboGroup,
     };
   }
 

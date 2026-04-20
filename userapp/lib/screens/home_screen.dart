@@ -17,11 +17,18 @@ class HomeScreen extends ConsumerWidget {
     final auth = ref.watch(authControllerProvider);
     final donorCardAsync = ref.watch(donorCardProvider);
 
+    final status = auth.user?.eligibilityStatus?.trim().toUpperCase();
+    final eligible = status == 'ELIGIBLE';
+
+    final bloodGroup = auth.user?.typeSanguinAboGroup ?? '—';
+    final firstName = auth.user?.prenom ?? 'donneur';
+
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(18, 14, 18, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          /// HEADER
           Row(
             children: [
               const Icon(
@@ -45,13 +52,18 @@ class HomeScreen extends ConsumerWidget {
               ),
             ],
           ),
+
           const Gap(18),
+
+          /// BANNIÈRE PRINCIPALE
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.primaryDark, AppColors.primary],
+              gradient: LinearGradient(
+                colors: eligible
+                    ? [AppColors.primaryDark, AppColors.primary]
+                    : [Colors.grey.shade700, Colors.grey.shade500],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -60,6 +72,7 @@ class HomeScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                /// BADGE STATUT
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 14,
@@ -69,62 +82,84 @@ class HomeScreen extends ConsumerWidget {
                     color: Colors.white.withOpacity(.16),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Text(
-                    'STATUT : ÉLIGIBLE',
-                    style: TextStyle(
+                  child: Text(
+                    'STATUT : ${status ?? 'INCONNU'}',
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1,
                     ),
                   ),
                 ),
+
                 const Gap(18),
-                const Text(
-                  'Vous êtes éligible\npour donner !',
-                  style: TextStyle(
+
+                /// TITRE
+                Text(
+                  eligible
+                      ? 'Vous êtes éligible\npour donner !'
+                      : 'Vous n’êtes pas encore\néligible',
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
                     height: 1.15,
                   ),
                 ),
+
                 const Gap(14),
+
+                /// MESSAGE
                 Text(
-                  'Votre générosité sauve des vies, ${auth.user?.prenom.isNotEmpty == true ? auth.user!.prenom : 'donneur'}. Prenez rendez-vous dès aujourd’hui.',
+                  eligible
+                      ? 'Votre générosité sauve des vies, $firstName. '
+                            'Prenez rendez-vous dès aujourd’hui.'
+                      : 'Merci $firstName. Vous pourrez reprendre '
+                            'les rendez-vous après 2 mois depuis votre dernier don.',
                   style: TextStyle(
                     color: Colors.white.withOpacity(.85),
                     fontSize: 18,
                     height: 1.5,
                   ),
                 ),
+
                 const Gap(18),
+
+                /// BOUTON RDV
                 AppButton(
                   label: 'Prendre rendez-vous',
-                  onPressed: () {
-                    context.go('/map');
-                  },
-                  backgroundColor: AppColors.background,
-                  foregroundColor: AppColors.primaryDark,
+                  onPressed: eligible ? () => context.go('/map') : null,
+                  backgroundColor: eligible
+                      ? AppColors.background
+                      : Colors.grey.shade300,
+                  foregroundColor: eligible
+                      ? AppColors.primaryDark
+                      : Colors.grey,
                 ),
               ],
             ),
           ),
+
           const Gap(18),
+
+          /// GROUPE SANGUIN
+          StatCard(
+            title: 'Groupe sanguin',
+            value: bloodGroup,
+            subtitle: 'Profil utilisateur',
+            valueColor: AppColors.primaryDark,
+          ),
+
+          const Gap(16),
+
+          /// STATS DONS
           donorCardAsync.when(
             data: (card) {
-              final bloodGroup = card?.groupeSanguin ?? 'O+';
-              final totalDonations = card?.nbDon ?? 12;
+              final totalDonations = card?.nbDon ?? 0;
               final livesSaved = totalDonations * 3;
 
               return Column(
                 children: [
-                  StatCard(
-                    title: 'Groupe sanguin',
-                    value: bloodGroup,
-                    subtitle: 'Donneur universel',
-                    valueColor: AppColors.primaryDark,
-                  ),
-                  const Gap(16),
                   StatCard(
                     title: 'Total des dons',
                     value: '$totalDonations',
@@ -141,24 +176,33 @@ class HomeScreen extends ConsumerWidget {
                 ],
               );
             },
-            loading: () => const Center(
-              child: Padding(
-                padding: EdgeInsets.all(20),
-                child: CircularProgressIndicator(),
-              ),
+            loading: () => Column(
+              children: const [
+                StatCard(
+                  title: 'Total des dons',
+                  value: '...',
+                  subtitle: 'Chargement',
+                ),
+                Gap(16),
+                StatCard(
+                  title: 'Vies sauvées',
+                  value: '...',
+                  subtitle: 'Chargement',
+                ),
+              ],
             ),
             error: (_, __) => Column(
               children: const [
                 StatCard(
-                  title: 'Groupe sanguin',
-                  value: 'O+',
-                  subtitle: 'Donneur universel',
+                  title: 'Total des dons',
+                  value: '0',
+                  subtitle: 'Aucun don enregistré',
                 ),
                 Gap(16),
                 StatCard(
-                  title: 'Total des dons',
-                  value: '12',
-                  subtitle: '+2 cette année',
+                  title: 'Vies sauvées',
+                  value: '0',
+                  subtitle: 'Commencez votre premier don',
                 ),
               ],
             ),
@@ -166,6 +210,7 @@ class HomeScreen extends ConsumerWidget {
 
           const Gap(24),
 
+          /// ACTIONS
           Row(
             children: [
               Expanded(
@@ -191,11 +236,15 @@ class HomeScreen extends ConsumerWidget {
           ),
 
           const Gap(24),
+
+          /// COLLECTE
           const Text(
             'Collecte de Sang',
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
           ),
+
           const Gap(14),
+
           Container(
             width: double.infinity,
             height: 240,
@@ -252,11 +301,9 @@ class HomeScreen extends ConsumerWidget {
                   bottom: 0,
                   child: CircleAvatar(
                     radius: 28,
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: eligible ? AppColors.primary : Colors.grey,
                     child: IconButton(
-                      onPressed: () {
-                        context.go('/map');
-                      },
+                      onPressed: eligible ? () => context.go('/map') : null,
                       icon: const Icon(
                         Icons.arrow_forward_rounded,
                         color: Colors.white,
@@ -267,7 +314,10 @@ class HomeScreen extends ConsumerWidget {
               ],
             ),
           ),
+
           const Gap(24),
+
+          /// URGENCES
           Row(
             children: const [
               Expanded(
@@ -285,14 +335,18 @@ class HomeScreen extends ConsumerWidget {
               ),
             ],
           ),
+
           const Gap(14),
+
           const UrgentNeedCard(
             group: 'AB-',
             title: 'Besoin Urgent : AB Négatif',
             location: 'Hôpital Central',
             eta: 'Moins de 2h',
           ),
+
           const Gap(12),
+
           const UrgentNeedCard(
             group: 'O+',
             title: 'Réserve Faible : O Positif',

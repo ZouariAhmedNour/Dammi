@@ -41,6 +41,9 @@ public class RegisterRequest {
     @NotNull(message = "Le sexe est obligatoire")
     private Sexe sexe;
 
+    @NotNull(message = "Le type sanguin est obligatoire")
+    private Long typeSanguinId;
+
     // null si jamais donné
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate lastDonation;

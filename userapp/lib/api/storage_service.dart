@@ -1,6 +1,6 @@
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:userapp/models/app_user.dart';
+import 'package:userapp/models/user.dart';
 
 class StorageService {
   static const _tokenKey = 'auth_token';
@@ -10,7 +10,7 @@ class StorageService {
 
   Future<void> saveSession({
     required String token,
-    AppUser? user,
+    User? user,
   }) async {
     await _storage.write(key: _tokenKey, value: token);
 

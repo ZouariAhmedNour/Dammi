@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:userapp/models/appointment_models.dart';
 import 'package:userapp/providers/appointment_providers.dart';
+import 'package:userapp/providers/auth_provider.dart';
 import 'package:userapp/theme/app_colors.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
@@ -16,6 +17,7 @@ class MapScreen extends ConsumerStatefulWidget {
 
 class _MapScreenState extends ConsumerState<MapScreen> {
   final MapController _mapController = MapController();
+  
   bool _didFitBounds = false;
 
   void _fitAllPoints(List<PointCollecteModel> points) {
@@ -36,17 +38,14 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       );
 
       _mapController.fitCamera(
-        CameraFit.bounds(
-          bounds: bounds,
-          padding: const EdgeInsets.all(60),
-        ),
+        CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(60)),
       );
     }
 
     _didFitBounds = true;
   }
 
-  void _openPointDetails(PointCollecteModel point) {
+  void _openPointDetails(PointCollecteModel point, bool eligible) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -132,10 +131,20 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      context.go('/appointment/new/${point.id}');
-                    },
+                    onPressed: eligible
+                        ? () {
+                            Navigator.of(context).pop();
+                            context.go('/appointment/new/${point.id}');
+                          }
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: eligible
+                          ? AppColors.primary
+                          : Colors.grey.shade300,
+                      foregroundColor: eligible ? Colors.white : Colors.grey,
+                      disabledBackgroundColor: Colors.grey.shade300,
+                      disabledForegroundColor: Colors.grey,
+                    ),
                     child: const Text('Prendre un rendez-vous'),
                   ),
                 ),
@@ -150,6 +159,13 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   @override
   Widget build(BuildContext context) {
     final pointsAsync = ref.watch(pointsCollecteProvider);
+
+    final auth = ref.watch(authControllerProvider);
+
+     final status = auth.user?.eligibilityStatus?.trim().toUpperCase();
+     final eligible = status == 'ELIGIBLE';
+
+    
 
     return Scaffold(
       body: pointsAsync.when(
@@ -185,16 +201,13 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                           LatLng(point.latitude, point.longitude),
                           15,
                         );
-                        _openPointDetails(point);
+                        _openPointDetails(point, eligible);
                       },
                       child: Container(
                         decoration: BoxDecoration(
                           color: AppColors.primary,
                           shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 3,
-                          ),
+                          border: Border.all(color: Colors.white, width: 3),
                           boxShadow: [
                             BoxShadow(
                               color: AppColors.primary.withOpacity(.25),
@@ -216,9 +229,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             ],
           );
         },
-        loading: () => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
           child: Text(
             'Erreur de chargement des points\n$e',

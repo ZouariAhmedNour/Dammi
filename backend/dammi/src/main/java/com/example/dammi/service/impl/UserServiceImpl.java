@@ -53,11 +53,14 @@ public class UserServiceImpl implements UserService {
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .role(user.getRole())
+                .sexe(user.getSexe())
                 .lastDonation(user.getLastDonation())
                 .eligibilityStatus(user.getEligibilityStatus())
                 .statutPertinent(user.getStatutPertinent())
                 .createdAt(user.getCreatedAt())
                 .avatar(user.getAvatar())
+                .typeSanguinId(user.getTypeSanguin() != null ? user.getTypeSanguin().getId() : null)
+                .typeSanguinAboGroup(user.getTypeSanguin() != null ? user.getTypeSanguin().getAboGroup() : null)
                 .build();
     }
 

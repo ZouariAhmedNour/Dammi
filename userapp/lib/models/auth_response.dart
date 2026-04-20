@@ -1,8 +1,8 @@
-import 'package:userapp/models/app_user.dart';
+import 'package:userapp/models/user.dart';
 
 class AuthResponse {
   final String token;
-  final AppUser? user;
+  final User? user;
 
   const AuthResponse({
     required this.token,
@@ -20,13 +20,13 @@ class AuthResponse {
     final dynamic nestedUser =
         json['user'] ?? json['utilisateur'] ?? json['data']?['user'];
 
-    AppUser? user;
+    User? user;
     if (nestedUser is Map<String, dynamic>) {
-      user = AppUser.fromJson(nestedUser);
+      user = User.fromJson(nestedUser);
     } else if (json.containsKey('email') ||
         json.containsKey('prenom') ||
         json.containsKey('nom')) {
-      user = AppUser.fromJson(json);
+      user = User.fromJson(json);
     }
 
     return AuthResponse(

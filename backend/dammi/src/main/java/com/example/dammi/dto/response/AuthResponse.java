@@ -12,6 +12,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class AuthResponse {
     private String token;
+
+    @Builder.Default
     private String type = "Bearer";
     private Long id;
     private String email;
@@ -21,4 +23,7 @@ public class AuthResponse {
     private Sexe sexe;
     private LocalDate lastDonation;
     private Role role;
+    private String eligibilityStatus;
+    private Long typeSanguinId;
+    private String typeSanguinAboGroup;
 }

@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:userapp/components/app_button.dart';
 import 'package:userapp/components/app_text_field.dart';
 import 'package:userapp/providers/auth_provider.dart';
+import 'package:userapp/providers/blood_type_provider.dart';
 import 'package:userapp/theme/app_colors.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -25,6 +26,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _confirmPasswordCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
 
+  dynamic _selectedBloodType;
   String? _selectedSexe;
   bool _neverDonated = true;
   DateTime? _lastDonation;
@@ -100,6 +102,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     return;
   }
 
+  if (_selectedBloodType == null) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('Veuillez choisir un type sanguin')),
+  );
+  return;
+}
+
   final auth = ref.read(authControllerProvider);
 
   final ok = await auth.register(
@@ -109,28 +118,26 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     password: _passwordCtrl.text.trim(),
     phone: _phoneCtrl.text.trim(),
     sexe: _selectedSexe!,
+    typeSanguinId: _selectedBloodType!.id,
     lastDonation: _neverDonated ? null : _lastDonation,
   );
 
   if (!mounted) return;
 
-  if (ok) {
-    await _showSuccessDialog();
-
-    if (!mounted) return;
-    context.go('/login');
-  } else {
+ if (ok) {
+  await _showSuccessDialog();
+} else {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(auth.errorMessage ?? 'Inscription échouée')),
     );
   }
 }
 
-  Future<void> _showSuccessDialog() async {
+ Future<void> _showSuccessDialog() async {
   await showDialog(
     context: context,
     barrierDismissible: false,
-    builder: (context) {
+    builder: (dialogContext) {
       return AlertDialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
@@ -146,19 +153,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             Expanded(
               child: Text(
                 'Compte créé',
-                style: TextStyle(fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ],
         ),
         content: const Text(
-          'Votre compte a été créé avec succès.',
+          'Compte créé avec succès.\nVous pouvez vous connecter.',
           style: TextStyle(fontSize: 16),
         ),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop();
+              Navigator.of(dialogContext).pop();
+              context.go('/login');
             },
             child: const Text('OK'),
           ),
@@ -171,6 +181,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
+    final bloodTypesAsync = ref.watch(bloodTypesProvider);
 
     final dateText = _lastDonation == null
         ? 'Choisir une date'
@@ -315,6 +326,57 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                     const Gap(18),
 
+Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    const Text(
+      'GROUPE SANGUIN',
+      style: TextStyle(
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.4,
+        color: AppColors.textSecondary,
+      ),
+    ),
+    const Gap(10),
+
+    bloodTypesAsync.when(
+      data: (bloodTypes) {
+        return DropdownButtonFormField<dynamic>(
+          value: _selectedBloodType,
+          items: bloodTypes.map((type) {
+            return DropdownMenuItem(
+              value: type,
+              child: Text(type.aboGroup),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedBloodType = value;
+            });
+          },
+          decoration: const InputDecoration(
+            hintText: 'Choisir le groupe sanguin',
+            prefixIcon: Icon(Icons.bloodtype_outlined),
+          ),
+          validator: (value) {
+            if (value == null) {
+              return 'Groupe sanguin requis';
+            }
+            return null;
+          },
+        );
+      },
+      loading: () => const Center(
+        child: CircularProgressIndicator(),
+      ),
+      error: (_, __) => const Text(
+        'Erreur chargement groupes sanguins',
+      ),
+    ),
+  ],
+),
+                    const Gap(18),
+
                     AppTextField(
                       label: 'Mot de passe',
                       hint: '••••••••',
@@ -322,8 +384,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       prefixIcon: Icons.lock_outline_rounded,
                       obscureText: true,
                       validator: (value) {
-                        if (value == null || value.length < 6) {
-                          return 'Minimum 6 caractères';
+                        if (value == null || value.length < 8) {
+                          return 'Minimum 8 caractères';
                         }
                         return null;
                       },

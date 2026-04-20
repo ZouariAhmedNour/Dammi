@@ -22,4 +22,6 @@ public class UserResponse {
     private Boolean statutPertinent;
     private LocalDateTime createdAt;
     private String avatar;
+    private Long typeSanguinId;
+    private String typeSanguinAboGroup;
 }

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:userapp/api/api_client.dart';
 import 'package:userapp/api/auth_api.dart';
 import 'package:userapp/api/storage_service.dart';
-import 'package:userapp/models/app_user.dart';
+import 'package:userapp/models/user.dart';
 
 enum AuthStatus {
   initial,
@@ -21,7 +21,7 @@ class AuthController extends ChangeNotifier {
   }
 
   AuthStatus status = AuthStatus.initial;
-  AppUser? user;
+  User? user;
   String? token;
   String? errorMessage;
 
@@ -38,7 +38,7 @@ class AuthController extends ChangeNotifier {
     token = storedToken;
 
     if (storedUserJson != null) {
-      user = AppUser.fromRawJson(storedUserJson);
+      user = User.fromRawJson(storedUserJson);
     }
 
     status = (storedToken != null && storedToken.isNotEmpty)
@@ -64,7 +64,7 @@ class AuthController extends ChangeNotifier {
 
       token = response.token;
       user = response.user ??
-          AppUser(
+          User(
             id: null,
             prenom: '',
             nom: '',
@@ -94,6 +94,7 @@ class AuthController extends ChangeNotifier {
   required String password,
   required String phone,
   required String sexe,
+  required int typeSanguinId,
   DateTime? lastDonation,
 }) async {
   try {
@@ -101,20 +102,22 @@ class AuthController extends ChangeNotifier {
     status = AuthStatus.loading;
     notifyListeners();
 
-    await _authApi.register(
+    final response = await _authApi.register(
       prenom: prenom,
       nom: nom,
       email: email,
       password: password,
       phone: phone,
       sexe: sexe,
+      typeSanguinId: typeSanguinId,
       lastDonation: lastDonation,
     );
 
-    // IMPORTANT :
-    // on ne connecte pas automatiquement l'utilisateur
-    token = null;
-    user = null;
+    // on récupère les données renvoyées par le backend
+    token = response.token;
+    user = response.user;
+
+    // on ne connecte pas automatiquement
     status = AuthStatus.unauthenticated;
     notifyListeners();
 
