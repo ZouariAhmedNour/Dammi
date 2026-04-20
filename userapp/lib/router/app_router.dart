@@ -2,11 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:userapp/models/appointment_models.dart';
 import 'package:userapp/providers/auth_provider.dart';
+import 'package:userapp/screens/blood_request_history_screen.dart';
 import 'package:userapp/screens/history_rdv_screen.dart';
 import 'package:userapp/screens/home_screen.dart';
 import 'package:userapp/screens/login_screen.dart';
 import 'package:userapp/screens/main_shell.dart';
 import 'package:userapp/screens/map_screen.dart';
+import 'package:userapp/screens/new_blood_request_screen.dart';
 import 'package:userapp/screens/new_rendez_vous_screen.dart';
 import 'package:userapp/screens/profile_screen.dart';
 import 'package:userapp/screens/questionnaire_eligibilite_screen.dart';
@@ -33,7 +35,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
       ),
-       GoRoute(
+      GoRoute(
         path: '/appointment/new/:pointId',
         builder: (context, state) {
           final pointId = int.parse(state.pathParameters['pointId']!);
@@ -52,7 +54,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),
         routes: [
@@ -60,10 +61,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/home',
             builder: (context, state) => const HomeScreen(),
           ),
-          GoRoute(
-            path: '/map',
-            builder: (context, state) => const MapScreen(),
-          ),
+          GoRoute(path: '/map', builder: (context, state) => const MapScreen()),
           GoRoute(
             path: '/historyRDV',
             builder: (context, state) => const HistoryRDVScreen(),
@@ -72,16 +70,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/profile',
             builder: (context, state) => const ProfileScreen(),
           ),
+          GoRoute(
+            path: '/request/new',
+            builder: (context, state) => const NewBloodRequestScreen(),
+          ),
+          GoRoute(
+            path: '/request/history',
+            builder: (context, state) => const BloodRequestHistoryScreen(),
+          ),
         ],
       ),
     ],
     redirect: (context, state) {
       final isAuthRoute =
-          state.matchedLocation == '/login' || state.matchedLocation == '/register';
+          state.matchedLocation == '/login' ||
+          state.matchedLocation == '/register';
 
       final isLoggedIn = auth.status == AuthStatus.authenticated;
 
-      if (auth.status == AuthStatus.loading || auth.status == AuthStatus.initial) {
+      if (auth.status == AuthStatus.loading ||
+          auth.status == AuthStatus.initial) {
         return null;
       }
 

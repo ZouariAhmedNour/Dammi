@@ -24,7 +24,11 @@ class HomeScreen extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.water_drop_rounded, color: AppColors.primary, size: 32),
+              const Icon(
+                Icons.water_drop_rounded,
+                color: AppColors.primary,
+                size: 32,
+              ),
               const SizedBox(width: 8),
               const Text(
                 'Dammi',
@@ -57,7 +61,10 @@ class HomeScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(.16),
                     borderRadius: BorderRadius.circular(20),
@@ -94,7 +101,7 @@ class HomeScreen extends ConsumerWidget {
                 AppButton(
                   label: 'Prendre rendez-vous',
                   onPressed: () {
-                     context.go('/map');
+                    context.go('/map');
                   },
                   backgroundColor: AppColors.background,
                   foregroundColor: AppColors.primaryDark,
@@ -156,13 +163,37 @@ class HomeScreen extends ConsumerWidget {
               ],
             ),
           ),
+
+          const Gap(24),
+
+          Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  label: 'Nouvelle demande',
+                  onPressed: () {
+                    context.go('/request/new');
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: AppButton(
+                  label: 'Mes demandes',
+                  onPressed: () {
+                    context.go('/request/history');
+                  },
+                  backgroundColor: AppColors.surface,
+                  foregroundColor: AppColors.primaryDark,
+                ),
+              ),
+            ],
+          ),
+
           const Gap(24),
           const Text(
             'Collecte de Sang',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-            ),
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
           ),
           const Gap(14),
           Container(
@@ -226,7 +257,10 @@ class HomeScreen extends ConsumerWidget {
                       onPressed: () {
                         context.go('/map');
                       },
-                      icon: const Icon(Icons.arrow_forward_rounded, color: Colors.white),
+                      icon: const Icon(
+                        Icons.arrow_forward_rounded,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -239,10 +273,7 @@ class HomeScreen extends ConsumerWidget {
               Expanded(
                 child: Text(
                   'Urgences Vitales',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
                 ),
               ),
               Text(

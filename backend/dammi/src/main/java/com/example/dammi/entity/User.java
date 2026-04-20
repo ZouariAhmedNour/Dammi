@@ -88,6 +88,10 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<UserQuestionnaire> userQuestionnaires;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "type_sanguin_id")
+    private TypeSanguin typeSanguin;
+
 
     @PrePersist
     protected void onCreate() {

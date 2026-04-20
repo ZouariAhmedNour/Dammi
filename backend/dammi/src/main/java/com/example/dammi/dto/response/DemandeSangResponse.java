@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 public class DemandeSangResponse {
     private Long id;
     private int quantite;
+    private int quantiteLivree;
     private StatutDemande statut;
     private LocalDateTime dateCreation;
     private boolean urgence;

@@ -11,10 +11,18 @@ class BloodType {
 
   factory BloodType.fromJson(Map<String, dynamic> json) {
     return BloodType(
-      id: json['id'] as int,
-      label: (json['label'] ?? '').toString(),
-      aboGroup: (json['aboGroup'] ?? '').toString(),
+      id: (json['id'] as num).toInt(),
+      label: json['label'] as String? ?? '',
+      aboGroup: json['aboGroup'] as String? ?? '',
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'label': label,
+      'aboGroup': aboGroup,
+    };
   }
 
   @override

@@ -33,6 +33,7 @@ public class DemandeSangServiceImpl implements DemandeSangService {
 
         DemandeSang demande = DemandeSang.builder()
                 .quantite(req.getQuantite())
+                .quantiteLivree(0)
                 .statut(StatutDemande.EN_ATTENTE)
                 .urgence(req.isUrgence())
                 .contactNom(req.getContactNom())
@@ -105,6 +106,7 @@ public class DemandeSangServiceImpl implements DemandeSangService {
         return DemandeSangResponse.builder()
                 .id(d.getId())
                 .quantite(d.getQuantite())
+                .quantiteLivree(d.getQuantiteLivree())
                 .statut(d.getStatut())
                 .dateCreation(d.getDateCreation())
                 .urgence(d.isUrgence())

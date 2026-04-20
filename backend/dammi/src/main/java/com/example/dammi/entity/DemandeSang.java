@@ -23,6 +23,9 @@ public class DemandeSang {
     @Column(nullable = false)
     private int quantite;
 
+    @Column(nullable = false)
+    private int quantiteLivree = 0;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private StatutDemande statut;
@@ -57,6 +60,7 @@ public class DemandeSang {
     @PrePersist
     protected void onCreate() {
         dateCreation = LocalDateTime.now();
+
     }
 
 }
