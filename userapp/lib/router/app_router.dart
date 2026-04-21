@@ -14,6 +14,7 @@ import 'package:userapp/screens/profile_screen.dart';
 import 'package:userapp/screens/questionnaire_eligibilite_screen.dart';
 import 'package:userapp/screens/register_screen.dart';
 import 'package:userapp/screens/rendez_vous_result_screen.dart';
+import 'package:userapp/screens/urgent_blood_requests_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final auth = ref.watch(authControllerProvider);
@@ -77,6 +78,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/request/history',
             builder: (context, state) => const BloodRequestHistoryScreen(),
+          ),
+          GoRoute(
+            path: '/demandes-urgentes',
+            builder: (context, state) => const UrgentBloodRequestsScreen(),
           ),
         ],
       ),

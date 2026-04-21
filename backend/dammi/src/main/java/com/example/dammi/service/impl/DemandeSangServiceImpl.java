@@ -118,4 +118,15 @@ public class DemandeSangServiceImpl implements DemandeSangService {
                 .typeSanguinAboGroup(d.getTypeSanguin() != null ? d.getTypeSanguin().getAboGroup() : null)
                 .build();
     }
+
+
+    @Override
+    public List<DemandeSangResponse> getDemandesUrgentesPubliques() {
+        return demandeSangRepository
+                .findByUrgenceTrueAndStatut(StatutDemande.EN_ATTENTE)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
 }

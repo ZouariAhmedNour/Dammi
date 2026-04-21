@@ -15,4 +15,5 @@ public interface DemandeSangService {
     DemandeSangResponse updateStatut(Long id, StatutDemande statut);
     DemandeSangResponse modifierDemande(Long id, DemandeSangRequest request);
     void supprimerDemande(Long id);
+    List<DemandeSangResponse> getDemandesUrgentesPubliques();
 }

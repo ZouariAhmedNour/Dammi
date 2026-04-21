@@ -58,6 +58,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/stocks/**").hasAnyRole("ADMIN", "AGENT")
                         .requestMatchers(HttpMethod.PUT, "/api/dons/*/statut").hasAnyRole("ADMIN", "AGENT")
                         .requestMatchers(HttpMethod.PUT, "/api/demandes/*/statut").hasAnyRole("ADMIN", "AGENT")
+                                .requestMatchers(HttpMethod.GET, "/api/demandes/publiques/urgentes")
+                                .hasAnyRole("USER", "AGENT", "ADMIN")
                         // Authentifiés (USER + AGENT + ADMIN)
 //                        .anyRequest().authenticated()
                         .anyRequest().permitAll()

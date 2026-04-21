@@ -85,4 +85,11 @@ public class DemandeSangController {
         service.supprimerDemande(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/publiques/urgentes")
+    @PreAuthorize("hasAnyRole('USER', 'AGENT', 'ADMIN')")
+    @Operation(summary = "Demandes de sang urgentes visibles par les donneurs")
+    public ResponseEntity<List<DemandeSangResponse>> getUrgentesPubliques() {
+        return ResponseEntity.ok(service.getDemandesUrgentesPubliques());
+    }
 }

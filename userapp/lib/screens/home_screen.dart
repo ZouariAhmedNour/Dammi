@@ -3,10 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:userapp/components/app_button.dart';
+import 'package:userapp/components/notification_button.dart';
 import 'package:userapp/components/stat_card.dart';
 import 'package:userapp/components/urgent_need_card.dart';
 import 'package:userapp/providers/auth_provider.dart';
+import 'package:userapp/providers/urgent_requests_provider.dart';
 import 'package:userapp/providers/user_provider.dart';
+import 'package:userapp/screens/urgent_blood_requests_screen.dart';
 import 'package:userapp/theme/app_colors.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -125,16 +128,10 @@ class HomeScreen extends ConsumerWidget {
 
               const SizedBox(width: 8),
 
-              IconButton(
-                onPressed: () {},
-                constraints: const BoxConstraints(),
-                padding: EdgeInsets.zero,
-                icon: const Icon(
-                  Icons.notifications_none_rounded,
-                  color: AppColors.primaryDark,
-                  size: 22,
-                ),
-              ),
+              NotificationButton(
+  isPertinent: isPertinent,
+  userId: auth.user?.id,
+),
             ],
           ),
 
@@ -366,45 +363,86 @@ class HomeScreen extends ConsumerWidget {
 
           const Gap(24),
 
-          /// URGENCES
-          Row(
-            children: const [
-              Expanded(
-                child: Text(
-                  'Urgences Vitales',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+/// URGENCES RÉELLES
+Row(
+  children: [
+    const Expanded(
+      child: Text(
+        'Demandes urgentes',
+        style: TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    ),
+    TextButton(
+      onPressed: isPertinent
+          ? () => context.go('/demandes-urgentes')
+          : null,
+      child: const Text(
+        'Voir tout',
+        style: TextStyle(
+          color: AppColors.primaryDark,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    ),
+  ],
+),
+
+const Gap(14),
+
+if (!isPertinent)
+  const Text(
+    'Activez le statut pertinent pour voir les demandes urgentes.',
+    style: TextStyle(
+      color: AppColors.textSecondary,
+      fontSize: 14,
+    ),
+  )
+else
+  Consumer(
+    builder: (context, ref, _) {
+      final urgentAsync = ref.watch(urgentBloodRequestsProvider);
+
+      return urgentAsync.when(
+        data: (requests) {
+          if (requests.isEmpty) {
+            return const Text(
+              'Aucune demande urgente pour le moment.',
+              style: TextStyle(
+                color: AppColors.textSecondary,
               ),
-              Text(
-                'Voir tout',
-                style: TextStyle(
-                  color: AppColors.primaryDark,
-                  fontWeight: FontWeight.w700,
+            );
+          }
+
+          final latest = [...requests]
+            ..sort((a, b) {
+              final da = a.dateCreation ?? DateTime.fromMillisecondsSinceEpoch(0);
+              final db = b.dateCreation ?? DateTime.fromMillisecondsSinceEpoch(0);
+              return db.compareTo(da);
+            });
+
+          return Column(
+            children: latest.take(2).map((request) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: BloodRequestCard(
+                  request: request,
+                  onRespond: () => context.go('/demandes-urgentes'),
                 ),
-              ),
-            ],
-          ),
-
-          const Gap(14),
-
-          const UrgentNeedCard(
-            group: 'AB-',
-            title: 'Besoin Urgent : AB Négatif',
-            location: 'Hôpital Central',
-            eta: 'Moins de 2h',
-          ),
-
-          const Gap(12),
-
-          const UrgentNeedCard(
-            group: 'O+',
-            title: 'Réserve Faible : O Positif',
-            location: 'Clinique du Parc',
-            eta: "Aujourd'hui",
-          ),
+              );
+            }).toList(),
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Text(
+          'Erreur: $e',
+          style: const TextStyle(color: AppColors.textSecondary),
+        ),
+      );
+    },
+  ),
         ],
       ),
     );
