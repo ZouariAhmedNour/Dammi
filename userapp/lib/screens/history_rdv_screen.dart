@@ -7,8 +7,22 @@ import 'package:userapp/providers/appointment_providers.dart';
 import 'package:userapp/providers/auth_provider.dart';
 import 'package:userapp/theme/app_colors.dart';
 
-class HistoryRDVScreen extends ConsumerWidget {
+class HistoryRDVScreen extends ConsumerStatefulWidget {
   const HistoryRDVScreen({super.key});
+
+  @override
+  ConsumerState<HistoryRDVScreen> createState() => _HistoryRDVScreenState();
+}
+
+class _HistoryRDVScreenState extends ConsumerState<HistoryRDVScreen> {
+  @override
+  void initState() {
+    super.initState();
+
+    Future.microtask(() {
+      ref.invalidate(rendezVousHistoryProvider);
+    });
+  }
 
   Future<void> _showActions(
     BuildContext context,
@@ -19,9 +33,9 @@ class HistoryRDVScreen extends ConsumerWidget {
     final userId = auth.user?.id;
 
     if (userId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Utilisateur non connecté')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Utilisateur non connecté')),
+      );
       return;
     }
 
@@ -48,10 +62,8 @@ class HistoryRDVScreen extends ConsumerWidget {
                 const SizedBox(height: 8),
                 Text(
                   item.dateHeure != null
-                      ? DateFormat(
-                          'dd/MM/yyyy - HH:mm',
-                          'fr_FR',
-                        ).format(item.dateHeure!)
+                      ? DateFormat('dd/MM/yyyy - HH:mm', 'fr_FR')
+                          .format(item.dateHeure!)
                       : '-',
                   style: const TextStyle(color: AppColors.textSecondary),
                 ),
@@ -67,7 +79,9 @@ class HistoryRDVScreen extends ConsumerWidget {
                         await ref
                             .read(appointmentApiProvider)
                             .annulerRendezVous(item.id);
+
                         ref.invalidate(rendezVousHistoryProvider);
+                        await ref.read(authControllerProvider).refreshUser();
 
                         if (!context.mounted) return;
 
@@ -79,7 +93,7 @@ class HistoryRDVScreen extends ConsumerWidget {
                             ),
                             title: const Text('Succès'),
                             content: const Text(
-                              'Le don a été créé avec succès.',
+                              'Le rendez-vous a été annulé avec succès.',
                             ),
                             actions: [
                               TextButton(
@@ -92,9 +106,9 @@ class HistoryRDVScreen extends ConsumerWidget {
                         );
                       } catch (e) {
                         if (!context.mounted) return;
-                        ScaffoldMessenger.of(
-                          context,
-                        ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Erreur : $e')),
+                        );
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -123,6 +137,7 @@ class HistoryRDVScreen extends ConsumerWidget {
                             .transformerRdvEnDon(rendezVousId: item.id);
 
                         ref.invalidate(rendezVousHistoryProvider);
+                        await ref.read(authControllerProvider).refreshUser();
 
                         if (!context.mounted) return;
 
@@ -147,9 +162,9 @@ class HistoryRDVScreen extends ConsumerWidget {
                         );
                       } catch (e) {
                         if (!context.mounted) return;
-                        ScaffoldMessenger.of(
-                          context,
-                        ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Erreur : $e')),
+                        );
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -171,8 +186,13 @@ class HistoryRDVScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _refresh() async {
+    ref.invalidate(rendezVousHistoryProvider);
+    await Future.delayed(const Duration(milliseconds: 250));
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final rdvAsync = ref.watch(rendezVousHistoryProvider);
 
     return Scaffold(
@@ -189,58 +209,67 @@ class HistoryRDVScreen extends ConsumerWidget {
           }
 
           final now = DateTime.now();
-          final futurs =
-              items
-                  .where(
-                    (e) => e.dateHeure != null && e.dateHeure!.isAfter(now),
-                  )
-                  .toList()
-                ..sort((a, b) => a.dateHeure!.compareTo(b.dateHeure!));
 
-          final passes =
-              items
-                  .where(
-                    (e) => e.dateHeure != null && !e.dateHeure!.isAfter(now),
-                  )
-                  .toList()
-                ..sort((a, b) => b.dateHeure!.compareTo(a.dateHeure!));
+          final futurs = items
+              .where((e) => e.dateHeure != null && e.dateHeure!.isAfter(now))
+              .toList()
+            ..sort((a, b) => a.dateHeure!.compareTo(b.dateHeure!));
 
-          return ListView(
-            padding: const EdgeInsets.all(18),
-            children: [
-              if (futurs.isNotEmpty) ...[
-                const Text(
-                  'À venir',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 12),
-                ...futurs.map(
-                  (e) => _RdvCard(
-                    item: e,
-                    onTap: () => _showActions(context, ref, e),
+          final passes = items
+              .where((e) => e.dateHeure != null && !e.dateHeure!.isAfter(now))
+              .toList()
+            ..sort((a, b) => b.dateHeure!.compareTo(a.dateHeure!));
+
+          return RefreshIndicator(
+            onRefresh: _refresh,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(18),
+              children: [
+                if (futurs.isNotEmpty) ...[
+                  const Text(
+                    'À venir',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 26),
-              ],
-              if (passes.isNotEmpty) ...[
-                const Text(
-                  'Historique',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 12),
-                ...passes.map(
-                  (e) => _RdvCard(
-                    item: e,
-                    onTap: () => _showActions(context, ref, e),
+                  const SizedBox(height: 12),
+                  ...futurs.map(
+                    (e) => _RdvCard(
+                      item: e,
+                      onTap: () => _showActions(context, ref, e),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 26),
+                ],
+                if (passes.isNotEmpty) ...[
+                  const Text(
+                    'Historique',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ...passes.map(
+                    (e) => _RdvCard(
+                      item: e,
+                      onTap: () => _showActions(context, ref, e),
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) =>
-            Center(child: Text('Erreur : $e', textAlign: TextAlign.center)),
+        error: (e, _) => Center(
+          child: Text(
+            'Erreur : $e',
+            textAlign: TextAlign.center,
+          ),
+        ),
       ),
     );
   }
@@ -250,7 +279,10 @@ class _RdvCard extends StatelessWidget {
   final RendezVousModel item;
   final VoidCallback onTap;
 
-  const _RdvCard({required this.item, required this.onTap});
+  const _RdvCard({
+    required this.item,
+    required this.onTap,
+  });
 
   Color _statusColor(String status) {
     switch (status) {

@@ -49,7 +49,14 @@ public class DonServiceImpl implements DonService {
                     .orElseThrow(() -> new ResourceNotFoundException("TypeSanguin", "id", request.getTypeSanguinId())));
         }
 
-        return toResponse(donRepository.save(don));
+        Don saved = donRepository.save(don);
+
+        user.setEligibilityStatus("NON_ELIGIBLE");
+        user.setLastDonation(java.time.LocalDate.now());
+        user.setStatutPertinent(false);
+        userRepository.save(user);
+
+        return toResponse(saved);
     }
 
     @Override

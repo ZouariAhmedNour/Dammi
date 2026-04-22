@@ -19,22 +19,22 @@ class MainShell extends StatelessWidget {
     return 0;
   }
 
-  void _onTap(BuildContext context, int index) {
-    switch (index) {
-      case 0:
-        context.go('/home');
-        break;
-      case 1:
-        context.go('/map');
-        break;
-      case 2:
-        context.go('/historyRDV');
-        break;
-      case 3:
-        context.go('/profile');
-        break;
-    }
+ void _onTap(BuildContext context, int index) {
+  switch (index) {
+    case 0:
+      context.go('/home');
+      break;
+    case 1:
+      context.go('/map');
+      break;
+    case 2:
+      context.pushReplacement('/historyRDV');
+      break;
+    case 3:
+      context.go('/profile');
+      break;
   }
+}
 
   @override
   Widget build(BuildContext context) {

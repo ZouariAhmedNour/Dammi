@@ -156,6 +156,24 @@ void updatePertinent(bool value) async {
 
   notifyListeners();
 }
+Future<void> refreshUser() async {
+  if (user?.id == null) return;
+
+  try {
+    final updatedUser = await _authApi.getUserById(user!.id!);
+
+    user = updatedUser;
+
+    await _storage.saveSession(
+      token: token!,
+      user: user,
+    );
+
+    notifyListeners();
+  } catch (e) {
+    debugPrint('Erreur refresh user: $e');
+  }
+}
 
   Future<void> logout() async {
     await _storage.clearSession();
@@ -165,6 +183,7 @@ void updatePertinent(bool value) async {
     status = AuthStatus.unauthenticated;
     notifyListeners();
   }
+
 }
 
 

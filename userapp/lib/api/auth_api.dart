@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:userapp/api/api_client.dart';
 import 'package:userapp/models/auth_response.dart';
+import 'package:userapp/models/user.dart';
 
 class AuthApi {
   final Dio _dio;
@@ -110,6 +111,12 @@ class AuthApi {
     }
   }
 
+  Future<User> getUserById(int id) async {
+  final response = await _dio.get('/users/$id');
+
+  return User.fromJson(response.data);
+}
+
   String _extractMessage(DioException e) {
     final data = e.response?.data;
 
@@ -142,6 +149,7 @@ class AuthApi {
         return 'Réponse serveur invalide';
     }
   }
+
 }
 
 final authApiProvider = Provider<AuthApi>((ref) {
