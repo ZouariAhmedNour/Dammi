@@ -1,7 +1,9 @@
 package com.example.dammi.controller;
 
 
+import com.example.dammi.dto.request.ContribuerDemandeRequest;
 import com.example.dammi.dto.request.DemandeSangRequest;
+import com.example.dammi.dto.response.ContribuerDemandeResponse;
 import com.example.dammi.dto.response.DemandeSangResponse;
 import com.example.dammi.entity.enums.StatutDemande;
 import com.example.dammi.service.DemandeSangService;
@@ -35,7 +37,7 @@ public class DemandeSangController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('AGENT', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('AGENT', 'ADMIN', 'USER')")
     @Operation(summary = "Liste toutes les demandes")
     public ResponseEntity<List<DemandeSangResponse>> getAll() {
         return ResponseEntity.ok(service.getAllDemandes());
@@ -91,5 +93,15 @@ public class DemandeSangController {
     @Operation(summary = "Demandes de sang urgentes visibles par les donneurs")
     public ResponseEntity<List<DemandeSangResponse>> getUrgentesPubliques() {
         return ResponseEntity.ok(service.getDemandesUrgentesPubliques());
+    }
+
+    @PostMapping("/{id}/contribuer")
+    @PreAuthorize("hasAnyRole('USER', 'AGENT', 'ADMIN')")
+    @Operation(summary = "Contribuer à une demande de sang")
+    public ResponseEntity<ContribuerDemandeResponse> contribuer(
+            @PathVariable Long id,
+            @Valid @RequestBody ContribuerDemandeRequest req
+    ) {
+        return ResponseEntity.ok(service.contribuerAUneDemande(id, req.getUserId()));
     }
 }

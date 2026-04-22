@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:userapp/api/api_client.dart';
+import 'package:userapp/api/appointment_api.dart';
 import 'package:userapp/api/blood_request_api.dart';
+import 'package:userapp/models/appointment_models.dart';
 import 'package:userapp/models/blood_request.dart';
 
 final bloodRequestApiProvider = Provider<BloodRequestApi>((ref) {
@@ -18,6 +20,15 @@ final bloodRequestSubmitProvider =
   return BloodRequestSubmitNotifier(ref.read(bloodRequestApiProvider));
 });
 
+final pointsCollecteProvider = FutureProvider<List<PointCollecteModel>>((ref) async {
+  return ref.read(appointmentApiProvider).getPointsCollecte();
+});
+
+final allRequestsProvider =
+    FutureProvider<List<BloodRequest>>((ref) async {
+  return ref.read(bloodRequestApiProvider).getAllRequests();
+});
+
 class BloodRequestSubmitNotifier extends StateNotifier<AsyncValue<void>> {
   final BloodRequestApi _api;
 
@@ -30,9 +41,11 @@ class BloodRequestSubmitNotifier extends StateNotifier<AsyncValue<void>> {
         quantite: body.quantite,
         urgence: body.urgence,
         contactNom: body.contactNom,
+        contactTelephone: body.contactTelephone,
         raisonDemande: body.raisonDemande ?? '',
         notesComplementaires: body.notesComplementaires ?? '',
         userId: body.userId,
+        pointCollecteId: body.pointCollecteId,
         typeSanguinId: body.typeSanguinId ?? 0,
       );
       state = const AsyncData(null);

@@ -1,6 +1,8 @@
 package com.example.dammi.controller;
 
+import com.example.dammi.dto.request.DonRequest;
 import com.example.dammi.dto.request.RendezVousRequest;
+import com.example.dammi.dto.response.DonResponse;
 import com.example.dammi.dto.response.RendezVousResponse;
 import com.example.dammi.service.RendezVousService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -57,6 +59,13 @@ public class RendezVousController {
     @Operation(summary = "Annuler un rendez-vous")
     public ResponseEntity<RendezVousResponse> annuler(@PathVariable Long id) {
         return ResponseEntity.ok(service.annulerRendezVous(id));
+    }
+
+    @PostMapping("/{id}/don")
+    @PreAuthorize("hasAnyRole('USER', 'AGENT', 'ADMIN')")
+    public ResponseEntity<DonResponse> creerDonDepuisRdv(@PathVariable Long id) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(service.creerDonDepuisRdv(id));
     }
 
 }

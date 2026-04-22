@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:userapp/models/appointment_models.dart';
 import 'package:userapp/providers/auth_provider.dart';
+import 'package:userapp/screens/all_blood_requests_screen.dart';
 import 'package:userapp/screens/blood_request_history_screen.dart';
 import 'package:userapp/screens/history_rdv_screen.dart';
 import 'package:userapp/screens/home_screen.dart';
@@ -14,6 +15,7 @@ import 'package:userapp/screens/profile_screen.dart';
 import 'package:userapp/screens/questionnaire_eligibilite_screen.dart';
 import 'package:userapp/screens/register_screen.dart';
 import 'package:userapp/screens/rendez_vous_result_screen.dart';
+import 'package:userapp/screens/request_response_questionnaire_screen.dart';
 import 'package:userapp/screens/urgent_blood_requests_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -54,6 +56,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return RendezVousResultScreen(args: args);
         },
       ),
+       GoRoute(
+  path: '/request_response_questionnaire/:demandeId',
+  builder: (context, state) {
+    final demandeId = int.parse(state.pathParameters['demandeId']!);
+    return RequestResponseQuestionnaireScreen(demandeId: demandeId);
+  },
+),
 
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),
@@ -83,6 +92,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/demandes-urgentes',
             builder: (context, state) => const UrgentBloodRequestsScreen(),
           ),
+          GoRoute(
+            path: '/demandes',
+            builder: (context, state) => const AllBloodRequestsScreen(),
+          ),
+         
         ],
       ),
     ],

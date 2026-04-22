@@ -21,4 +21,7 @@ public class DemandeSangResponse {
     private Long userId;
     private String userNom;
     private String typeSanguinAboGroup;
+    private String contactTelephone;
+    private Long pointCollecteId;
+    private String pointCollecteNom;
 }

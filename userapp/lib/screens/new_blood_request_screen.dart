@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:userapp/components/app_button.dart';
 import 'package:userapp/components/app_text_field.dart';
 import 'package:userapp/components/blood_group_dropdown.dart';
+import 'package:userapp/components/point_collecte_dropdown.dart';
+import 'package:userapp/models/appointment_models.dart';
 import 'package:userapp/models/blood_request.dart';
 import 'package:userapp/models/blood_type.dart';
 import 'package:userapp/providers/auth_provider.dart';
@@ -15,7 +17,8 @@ class NewBloodRequestScreen extends ConsumerStatefulWidget {
   const NewBloodRequestScreen({super.key});
 
   @override
-  ConsumerState<NewBloodRequestScreen> createState() => _NewBloodRequestScreenState();
+  ConsumerState<NewBloodRequestScreen> createState() =>
+      _NewBloodRequestScreenState();
 }
 
 class _NewBloodRequestScreenState extends ConsumerState<NewBloodRequestScreen> {
@@ -25,6 +28,9 @@ class _NewBloodRequestScreenState extends ConsumerState<NewBloodRequestScreen> {
   final _contactNameCtrl = TextEditingController();
   final _reasonCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+
+  PointCollecteModel? _selectedPointCollecte;
 
   bool _urgency = false;
   BloodType? _selectedBloodType;
@@ -35,6 +41,7 @@ class _NewBloodRequestScreenState extends ConsumerState<NewBloodRequestScreen> {
     _contactNameCtrl.dispose();
     _reasonCtrl.dispose();
     _notesCtrl.dispose();
+    _phoneCtrl.dispose();
     super.dispose();
   }
 
@@ -42,12 +49,13 @@ class _NewBloodRequestScreenState extends ConsumerState<NewBloodRequestScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final auth = ref.read(authControllerProvider);
-    final userId = auth.user?.id; // adapte si ton modèle utilisateur a un autre champ
+    final userId =
+        auth.user?.id; // adapte si ton modèle utilisateur a un autre champ
 
     if (userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Utilisateur non connecté')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Utilisateur non connecté')));
       return;
     }
 
@@ -55,9 +63,15 @@ class _NewBloodRequestScreenState extends ConsumerState<NewBloodRequestScreen> {
       quantite: int.parse(_quantityCtrl.text.trim()),
       urgence: _urgency,
       contactNom: _contactNameCtrl.text.trim(),
-      raisonDemande: _reasonCtrl.text.trim().isEmpty ? null : _reasonCtrl.text.trim(),
-      notesComplementaires: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+      contactTelephone: _phoneCtrl.text.trim(),
+      raisonDemande: _reasonCtrl.text.trim().isEmpty
+          ? null
+          : _reasonCtrl.text.trim(),
+      notesComplementaires: _notesCtrl.text.trim().isEmpty
+          ? null
+          : _notesCtrl.text.trim(),
       userId: userId,
+      pointCollecteId: _selectedPointCollecte!.id,
       typeSanguinId: _selectedBloodType?.id,
     );
 
@@ -68,47 +82,45 @@ class _NewBloodRequestScreenState extends ConsumerState<NewBloodRequestScreen> {
 
       if (!mounted) return;
 
-await showDialog(
-  context: context,
-  barrierDismissible: false,
-  builder: (context) {
-    return AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      title: const Row(
-        children: [
-          Icon(
-            Icons.check_circle,
-            color: Colors.green,
-            size: 28,
-          ),
-          SizedBox(width: 8),
-          Text('Succès'),
-        ],
-      ),
-      content: const Text(
-        'Votre demande a été créée avec succès.',
-        style: TextStyle(fontSize: 16),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: const Text('OK'),
-        ),
-      ],
-    );
-  },
-);
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 28),
+                SizedBox(width: 8),
+                Text('Succès'),
+              ],
+            ),
+            content: const Text(
+              'Votre demande a été créée avec succès.',
+              style: TextStyle(fontSize: 16),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
 
-if (!mounted) return;
-context.go('/request/history');
+      if (!mounted) return;
+      context.go('/request/history');
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Erreur lors de la création de la demande')),
+        const SnackBar(
+          content: Text('Erreur lors de la création de la demande'),
+        ),
       );
     }
   }
@@ -117,11 +129,10 @@ context.go('/request/history');
   Widget build(BuildContext context) {
     final typesAsync = ref.watch(bloodTypesProvider);
     final submitState = ref.watch(bloodRequestSubmitProvider);
+    final pointsAsync = ref.watch(pointsCollecteProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Nouvelle demande'),
-      ),
+      appBar: AppBar(title: const Text('Nouvelle demande')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
@@ -182,9 +193,11 @@ context.go('/request/history');
                         BloodGroupDropdown(
                           items: types,
                           value: _selectedBloodType,
-                          onChanged: (value) => setState(() => _selectedBloodType = value),
+                          onChanged: (value) =>
+                              setState(() => _selectedBloodType = value),
                           validator: (_) {
-                            if (_selectedBloodType == null) return 'Sélectionnez un groupe sanguin';
+                            if (_selectedBloodType == null)
+                              return 'Sélectionnez un groupe sanguin';
                             return null;
                           },
                         ),
@@ -211,7 +224,10 @@ context.go('/request/history');
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                   subtitle: const Text('Traitement prioritaire immédiat'),
-                  secondary: const Icon(Icons.warning_amber_rounded, color: AppColors.primary),
+                  secondary: const Icon(
+                    Icons.warning_amber_rounded,
+                    color: AppColors.primary,
+                  ),
                 ),
 
                 const SizedBox(height: 8),
@@ -221,9 +237,51 @@ context.go('/request/history');
                   controller: _contactNameCtrl,
                   prefixIcon: Icons.person_outline,
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Le nom du contact est obligatoire';
+                    if (v == null || v.trim().isEmpty)
+                      return 'Le nom du contact est obligatoire';
                     return null;
                   },
+                ),
+                const SizedBox(height: 8),
+                AppTextField(
+                  label: 'Numéro de téléphone',
+                  hint: 'Ex: +216XXXXXXXX',
+                  controller: _phoneCtrl,
+                  prefixIcon: Icons.phone_outlined,
+                  keyboardType: TextInputType.phone,
+                  validator: (v) {
+                    final value = v?.trim() ?? '';
+                    final regex = RegExp(r'^[+]?[0-9]{8,15}$');
+                    if (value.isEmpty)
+                      return 'Le numéro de téléphone est obligatoire';
+                    if (!regex.hasMatch(value))
+                      return 'Numéro de téléphone invalide';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                pointsAsync.when(
+                  data: (points) {
+                    return PointCollecteDropdown(
+                      items: points,
+                      value: _selectedPointCollecte,
+                      onChanged: (value) =>
+                          setState(() => _selectedPointCollecte = value),
+                      validator: (value) {
+                        if (value == null)
+                          return 'Sélectionnez un point de collecte';
+                        return null;
+                      },
+                    );
+                  },
+                  loading: () => const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    child: LinearProgressIndicator(),
+                  ),
+                  error: (_, __) => const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    child: Text('Impossible de charger les points de collecte'),
+                  ),
                 ),
                 const SizedBox(height: 16),
 

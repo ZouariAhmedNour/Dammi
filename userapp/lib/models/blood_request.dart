@@ -64,6 +64,10 @@ class BloodRequest {
   /// Optionnel: à renvoyer côté backend pour une vraie barre de progression.
   final int? quantiteLivree;
 
+  final String? contactTelephone;
+  final int? pointCollecteId;
+  final String? pointCollecteNom;
+
   const BloodRequest({
     required this.id,
     required this.quantite,
@@ -77,6 +81,9 @@ class BloodRequest {
     required this.userNom,
     required this.typeSanguinAboGroup,
     this.quantiteLivree,
+    required this.contactTelephone,
+    required this.pointCollecteId,
+    required this.pointCollecteNom,
   });
 
   factory BloodRequest.fromJson(Map<String, dynamic> json) {
@@ -97,6 +104,9 @@ class BloodRequest {
       quantiteLivree: json['quantiteLivree'] != null
           ? (json['quantiteLivree'] as num).toInt()
           : null,
+          contactTelephone: json['contactTelephone']?.toString(),
+          pointCollecteId: (json['pointCollecteId'] as num?)?.toInt(),
+          pointCollecteNom: json['pointCollecteNom']?.toString(),
     );
   }
 
@@ -122,6 +132,8 @@ class BloodRequestCreateBody {
   final String? notesComplementaires;
   final int userId;
   final int? typeSanguinId;
+  final String contactTelephone;
+final int pointCollecteId;
 
   const BloodRequestCreateBody({
     required this.quantite,
@@ -131,6 +143,8 @@ class BloodRequestCreateBody {
     required this.notesComplementaires,
     required this.userId,
     required this.typeSanguinId,
+    required this.contactTelephone,
+required this.pointCollecteId,
   });
 
   Map<String, dynamic> toJson() {
@@ -142,6 +156,8 @@ class BloodRequestCreateBody {
       'notesComplementaires': notesComplementaires,
       'userId': userId,
       'typeSanguinId': typeSanguinId,
+      'contactTelephone': contactTelephone,
+      'pointCollecteId': pointCollecteId,
     };
   }
 }

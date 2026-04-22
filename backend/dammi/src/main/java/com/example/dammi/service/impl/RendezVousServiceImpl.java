@@ -1,6 +1,8 @@
 package com.example.dammi.service.impl;
 
+import com.example.dammi.dto.request.DonRequest;
 import com.example.dammi.dto.request.RendezVousRequest;
+import com.example.dammi.dto.response.DonResponse;
 import com.example.dammi.dto.response.RendezVousResponse;
 import com.example.dammi.entity.RendezVous;
 import com.example.dammi.entity.User;
@@ -9,6 +11,7 @@ import com.example.dammi.exception.ResourceNotFoundException;
 import com.example.dammi.repository.PointCollecteRepository;
 import com.example.dammi.repository.RendezVousRepository;
 import com.example.dammi.repository.UserRepository;
+import com.example.dammi.service.DonService;
 import com.example.dammi.service.RendezVousService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +26,7 @@ public class RendezVousServiceImpl implements RendezVousService {
     private final RendezVousRepository rendezVousRepository;
     private final UserRepository userRepository;
     private final PointCollecteRepository pointCollecteRepository;
+    private final DonService donService;
 
 
     @Override
@@ -82,5 +86,27 @@ public class RendezVousServiceImpl implements RendezVousService {
                 .userNom(rdv.getUser().getPrenom() + " " + rdv.getUser().getNom())
                 .pointCollecteNom(rdv.getPointCollecte() != null ? rdv.getPointCollecte().getNom() : null)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public DonResponse creerDonDepuisRdv(Long rdvId) {
+        RendezVous rdv = find(rdvId);
+
+        if (rdv.getStatut() == StatutRendezVous.ANNULE) {
+            throw new IllegalStateException("Impossible de créer un don depuis un rendez-vous annulé");
+        }
+
+        DonRequest request = new DonRequest();
+        request.setUserId(rdv.getUser().getId());
+        request.setDateDon(java.time.LocalDate.now());
+        request.setPointCollecteId(rdv.getPointCollecte() != null ? rdv.getPointCollecte().getId() : null);
+
+        DonResponse response = donService.creerDon(request);
+
+        rdv.setStatut(StatutRendezVous.EFFECTUE);
+        rendezVousRepository.save(rdv);
+
+        return response;
     }
 }

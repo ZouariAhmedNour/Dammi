@@ -13,4 +13,5 @@ public interface DemandeSangRepository extends JpaRepository<DemandeSang, Long> 
     List<DemandeSang> findByUrgenceTrue();
     List<DemandeSang> findByTypeSanguinId(Long typeSanguinId);
     List<DemandeSang> findByUrgenceTrueAndStatut(StatutDemande statut);
+    List<DemandeSang> findByPointCollecteId(Long pointCollecteId);
 }

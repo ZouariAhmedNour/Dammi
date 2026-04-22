@@ -24,7 +24,6 @@ class HomeScreen extends ConsumerWidget {
 
     final bloodGroup = auth.user?.typeSanguinAboGroup ?? '—';
     final firstName = auth.user?.prenom ?? 'donneur';
-
     final isPertinent = auth.user?.statutPertinent ?? false;
 
     return SingleChildScrollView(
@@ -41,7 +40,6 @@ class HomeScreen extends ConsumerWidget {
                 size: 28,
               ),
               const SizedBox(width: 8),
-
               const Text(
                 'Dammi',
                 style: TextStyle(
@@ -50,7 +48,6 @@ class HomeScreen extends ConsumerWidget {
                   color: AppColors.primaryDark,
                 ),
               ),
-
               const Spacer(),
 
               /// TOGGLE MODERNE
@@ -65,9 +62,7 @@ class HomeScreen extends ConsumerWidget {
                       .read(statutPertinentProvider.notifier)
                       .toggle(userId, newValue);
 
-                  ref
-                      .read(authControllerProvider)
-                      .updatePertinent(newValue);
+                  ref.read(authControllerProvider).updatePertinent(newValue);
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 250),
@@ -110,9 +105,7 @@ class HomeScreen extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        isPertinent
-                            ? 'Pertinent'
-                            : 'Non pertinent',
+                        isPertinent ? 'Pertinent' : 'Non pertinent',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -129,9 +122,9 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(width: 8),
 
               NotificationButton(
-  isPertinent: isPertinent,
-  userId: auth.user?.id,
-),
+                isPertinent: isPertinent,
+                userId: auth.user?.id,
+              ),
             ],
           ),
 
@@ -144,14 +137,8 @@ class HomeScreen extends ConsumerWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: eligible
-                    ? [
-                        AppColors.primaryDark,
-                        AppColors.primary,
-                      ]
-                    : [
-                        Colors.grey.shade700,
-                        Colors.grey.shade500,
-                      ],
+                    ? [AppColors.primaryDark, AppColors.primary]
+                    : [Colors.grey.shade700, Colors.grey.shade500],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -178,9 +165,7 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-
                 const Gap(18),
-
                 Text(
                   eligible
                       ? 'Vous êtes éligible\npour donner !'
@@ -192,9 +177,7 @@ class HomeScreen extends ConsumerWidget {
                     height: 1.15,
                   ),
                 ),
-
                 const Gap(14),
-
                 Text(
                   eligible
                       ? 'Votre générosité sauve des vies, $firstName.'
@@ -205,15 +188,12 @@ class HomeScreen extends ConsumerWidget {
                     height: 1.4,
                   ),
                 ),
-
                 const Gap(18),
-
                 AppButton(
                   label: 'Prendre rendez-vous',
                   fontSize: 14,
                   height: 46,
-                  onPressed:
-                      eligible ? () => context.go('/map') : null,
+                  onPressed: eligible ? () => context.go('/map') : null,
                   backgroundColor: eligible
                       ? AppColors.background
                       : Colors.grey.shade300,
@@ -266,15 +246,25 @@ class HomeScreen extends ConsumerWidget {
             ],
           ),
 
+          const Gap(12),
+
+          AppButton(
+            label: 'Toutes les demandes',
+            fontSize: 13,
+            height: 46,
+            onPressed: () {
+              context.go('/demandes');
+            },
+            backgroundColor: AppColors.primaryDark,
+            foregroundColor: Colors.white,
+          ),
+
           const Gap(24),
 
           /// COLLECTE
           const Text(
             'Collecte de Sang',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-            ),
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
           ),
 
           const Gap(14),
@@ -286,10 +276,7 @@ class HomeScreen extends ConsumerWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(24),
               gradient: const LinearGradient(
-                colors: [
-                  Color(0xFF989590),
-                  Color(0xFFD7D2C7),
-                ],
+                colors: [Color(0xFF989590), Color(0xFFD7D2C7)],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -316,8 +303,7 @@ class HomeScreen extends ConsumerWidget {
                   left: 0,
                   bottom: 0,
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Trouver un point',
@@ -329,9 +315,7 @@ class HomeScreen extends ConsumerWidget {
                       SizedBox(height: 4),
                       Text(
                         '3 centres ouverts',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                        ),
+                        style: TextStyle(color: AppColors.textSecondary),
                       ),
                     ],
                   ),
@@ -341,14 +325,9 @@ class HomeScreen extends ConsumerWidget {
                   bottom: 0,
                   child: CircleAvatar(
                     radius: 24,
-                    backgroundColor: eligible
-                        ? AppColors.primary
-                        : Colors.grey,
+                    backgroundColor: eligible ? AppColors.primary : Colors.grey,
                     child: IconButton(
-                      onPressed:
-                          eligible
-                              ? () => context.go('/map')
-                              : null,
+                      onPressed: eligible ? () => context.go('/map') : null,
                       icon: const Icon(
                         Icons.arrow_forward_rounded,
                         color: Colors.white,
@@ -363,86 +342,84 @@ class HomeScreen extends ConsumerWidget {
 
           const Gap(24),
 
-/// URGENCES RÉELLES
-Row(
-  children: [
-    const Expanded(
-      child: Text(
-        'Demandes urgentes',
-        style: TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    ),
-    TextButton(
-      onPressed: isPertinent
-          ? () => context.go('/demandes-urgentes')
-          : null,
-      child: const Text(
-        'Voir tout',
-        style: TextStyle(
-          color: AppColors.primaryDark,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    ),
-  ],
-),
-
-const Gap(14),
-
-if (!isPertinent)
-  const Text(
-    'Activez le statut pertinent pour voir les demandes urgentes.',
-    style: TextStyle(
-      color: AppColors.textSecondary,
-      fontSize: 14,
-    ),
-  )
-else
-  Consumer(
-    builder: (context, ref, _) {
-      final urgentAsync = ref.watch(urgentBloodRequestsProvider);
-
-      return urgentAsync.when(
-        data: (requests) {
-          if (requests.isEmpty) {
-            return const Text(
-              'Aucune demande urgente pour le moment.',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-              ),
-            );
-          }
-
-          final latest = [...requests]
-            ..sort((a, b) {
-              final da = a.dateCreation ?? DateTime.fromMillisecondsSinceEpoch(0);
-              final db = b.dateCreation ?? DateTime.fromMillisecondsSinceEpoch(0);
-              return db.compareTo(da);
-            });
-
-          return Column(
-            children: latest.take(2).map((request) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: BloodRequestCard(
-                  request: request,
-                  onRespond: () => context.go('/demandes-urgentes'),
+          /// URGENCES RÉELLES
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Demandes urgentes',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
                 ),
-              );
-            }).toList(),
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Text(
-          'Erreur: $e',
-          style: const TextStyle(color: AppColors.textSecondary),
-        ),
-      );
-    },
-  ),
+              ),
+              TextButton(
+                onPressed: isPertinent
+                    ? () => context.go('/demandes-urgentes')
+                    : null,
+                child: const Text(
+                  'Voir tout',
+                  style: TextStyle(
+                    color: AppColors.primaryDark,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const Gap(14),
+
+          if (!isPertinent)
+            const Text(
+              'Activez le statut pertinent pour voir les demandes urgentes.',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+            )
+          else
+            Consumer(
+              builder: (context, ref, _) {
+                final urgentAsync = ref.watch(urgentBloodRequestsProvider);
+
+                return urgentAsync.when(
+                  data: (requests) {
+                    if (requests.isEmpty) {
+                      return const Text(
+                        'Aucune demande urgente pour le moment.',
+                        style: TextStyle(color: AppColors.textSecondary),
+                      );
+                    }
+
+                    final latest = [...requests]
+                      ..sort((a, b) {
+                        final da =
+                            a.dateCreation ??
+                            DateTime.fromMillisecondsSinceEpoch(0);
+                        final db =
+                            b.dateCreation ??
+                            DateTime.fromMillisecondsSinceEpoch(0);
+                        return db.compareTo(da);
+                      });
+
+                    return Column(
+                      children: latest.take(2).map((request) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: BloodRequestCard(
+                            request: request,
+                            onRespond: () => context.go('/demandes-urgentes'),
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  },
+                  loading: () => const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                  error: (e, _) => Text(
+                    'Erreur: $e',
+                    style: const TextStyle(color: AppColors.textSecondary),
+                  ),
+                );
+              },
+            ),
         ],
       ),
     );

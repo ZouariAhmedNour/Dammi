@@ -9,13 +9,15 @@ class BloodRequestApi {
   BloodRequestApi(this._dio);
 
   Future<BloodRequest> createRequest({
-    required int quantite,
-    required bool urgence,
-    required String contactNom,
-    required String raisonDemande,
-    required String notesComplementaires,
-    required int userId,
-    required int typeSanguinId,
+   required int quantite,
+  required bool urgence,
+  required String contactNom,
+  required String contactTelephone,
+  required String raisonDemande,
+  required String notesComplementaires,
+  required int userId,
+  required int pointCollecteId,
+  required int? typeSanguinId,
   }) async {
     try {
       final response = await _dio.post(
@@ -24,9 +26,11 @@ class BloodRequestApi {
           'quantite': quantite,
           'urgence': urgence,
           'contactNom': contactNom,
+          'contactTelephone': contactTelephone,
           'raisonDemande': raisonDemande,
           'notesComplementaires': notesComplementaires,
           'userId': userId,
+          'pointCollecteId': pointCollecteId,
           'typeSanguinId': typeSanguinId,
         },
       );
@@ -68,6 +72,44 @@ class BloodRequestApi {
         .toList();
   } on DioException catch (e) {
     throw Exception(e.message ?? 'Erreur chargement demandes urgentes');
+  }
+}
+
+Future<List<BloodRequest>> getAllRequests() async {
+  try {
+    final response = await _dio.get('/demandes');
+
+    final data = response.data;
+
+    return (data as List)
+        .map(
+          (e) => BloodRequest.fromJson(
+            Map<String, dynamic>.from(e as Map),
+          ),
+        )
+        .toList();
+  } on DioException catch (e) {
+    throw Exception(
+      e.message ?? 'Erreur chargement demandes',
+    );
+  }
+}
+
+Future<Map<String, dynamic>> contribuerAUneDemande({
+  required int demandeId,
+  required int userId,
+}) async {
+  try {
+    final response = await _dio.post(
+      '/demandes/$demandeId/contribuer',
+      data: {
+        'userId': userId,
+      },
+    );
+
+    return Map<String, dynamic>.from(response.data as Map);
+  } on DioException catch (e) {
+    throw Exception(e.message ?? 'Erreur lors de la contribution');
   }
 }
 

@@ -131,6 +131,20 @@ class AppointmentApi {
         .map((e) => RendezVousModel.fromJson(Map<String, dynamic>.from(e as Map)))
         .toList();
   }
+
+  Future<void> annulerRendezVous(int rendezVousId) async {
+  await _dio.put('/rendez-vous/$rendezVousId/annuler');
+}
+
+Future<Map<String, dynamic>> transformerRdvEnDon({
+  required int rendezVousId,
+  
+}) async {
+  final response = await _dio.post(
+    '/rendez-vous/$rendezVousId/don',
+  );
+  return Map<String, dynamic>.from(response.data as Map);
+}
 }
 
 final appointmentApiProvider = Provider<AppointmentApi>((ref) {

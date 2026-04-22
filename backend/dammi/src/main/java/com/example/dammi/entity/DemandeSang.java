@@ -49,6 +49,15 @@ public class DemandeSang {
     @Column(length = 1000)
     private String notesComplementaires;
 
+    @Column(name = "contact_telephone", nullable = false, length = 20)
+    @NotBlank(message = "Le numéro de téléphone est obligatoire")
+    @Pattern(regexp = "^[+]?[0-9]{8,15}$", message = "Numéro de téléphone invalide")
+    private String contactTelephone;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "point_collecte_id", nullable = false)
+    private PointCollecte pointCollecte;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

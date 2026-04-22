@@ -20,6 +20,13 @@ public class DemandeSangRequest {
     @Size(max = 1000)
     private String notesComplementaires;
 
+    @NotBlank
+    @Pattern(regexp = "^[+]?[0-9]{8,15}$", message = "Numéro de téléphone invalide")
+    private String contactTelephone;
+
+    @NotNull
+    private Long pointCollecteId;
+
     @NotNull
     private Long userId;
 
