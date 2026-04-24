@@ -13,4 +13,6 @@ public interface DonRepository extends JpaRepository<Don, Long> {
     List<Don> findByStatus(StatutDon status);
     List<Don> findByPointCollecteId(Long pointCollecteId);
     List<Don> findByDateDonBetween(LocalDate debut, LocalDate fin);
+    long countByUserIdAndStatus(Long userId, StatutDon status);
+    boolean existsByUserIdAndStatus(Long userId, StatutDon status);
 }

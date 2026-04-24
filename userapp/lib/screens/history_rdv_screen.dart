@@ -5,6 +5,7 @@ import 'package:userapp/api/appointment_api.dart';
 import 'package:userapp/models/appointment_models.dart';
 import 'package:userapp/providers/appointment_providers.dart';
 import 'package:userapp/providers/auth_provider.dart';
+import 'package:userapp/providers/donor_card_provider.dart';
 import 'package:userapp/theme/app_colors.dart';
 
 class HistoryRDVScreen extends ConsumerStatefulWidget {
@@ -77,11 +78,18 @@ class _HistoryRDVScreenState extends ConsumerState<HistoryRDVScreen> {
 
                       try {
                         await ref
-                            .read(appointmentApiProvider)
-                            .annulerRendezVous(item.id);
+    .read(appointmentApiProvider)
+    .transformerRdvEnDon(rendezVousId: item.id);
 
-                        ref.invalidate(rendezVousHistoryProvider);
-                        await ref.read(authControllerProvider).refreshUser();
+/// refresh données RDV
+ref.invalidate(rendezVousHistoryProvider);
+
+/// refresh USER
+await ref.read(authControllerProvider).refreshUser();
+
+/// 🔥 TRÈS IMPORTANT → refresh carte donneur
+ref.invalidate(donorCardAccessProvider);
+ref.invalidate(donorCardProvider);
 
                         if (!context.mounted) return;
 

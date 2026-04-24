@@ -113,6 +113,33 @@ Future<Map<String, dynamic>> contribuerAUneDemande({
   }
 }
 
+Future<List<BloodRequest>> getCompatibleRequests(int userId) async {
+  try {
+    final response = await _dio.get('/demandes/publiques/compatibles/$userId');
+
+    final data = response.data;
+    return (data as List)
+        .map((e) => BloodRequest.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  } on DioException catch (e) {
+    throw Exception(e.message ?? 'Erreur chargement demandes compatibles');
+  }
+}
+
+Future<List<BloodRequest>> getCompatibleUrgentRequests(int userId) async {
+  try {
+    final response =
+        await _dio.get('/demandes/publiques/urgentes/compatibles/$userId');
+
+    final data = response.data;
+    return (data as List)
+        .map((e) => BloodRequest.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  } on DioException catch (e) {
+    throw Exception(e.message ?? 'Erreur chargement urgentes compatibles');
+  }
+}
+
 
 }
 

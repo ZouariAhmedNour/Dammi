@@ -7,8 +7,6 @@ class AppButton extends StatelessWidget {
   final IconData? trailingIcon;
   final Color? backgroundColor;
   final Color? foregroundColor;
-
-  /// NOUVEAU
   final double fontSize;
   final double height;
 
@@ -26,14 +24,20 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final disabled = onPressed == null || loading;
+
     return SizedBox(
       width: double.infinity,
       height: height,
       child: ElevatedButton(
-        onPressed: loading ? null : onPressed,
+        onPressed: disabled ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
           foregroundColor: foregroundColor,
+          disabledBackgroundColor:
+              backgroundColor?.withOpacity(0.45) ?? Colors.grey.shade400,
+          disabledForegroundColor:
+              foregroundColor?.withOpacity(0.85) ?? Colors.white70,
           padding: const EdgeInsets.symmetric(horizontal: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
@@ -44,17 +48,15 @@ class AppButton extends StatelessWidget {
             ? const SizedBox(
                 height: 20,
                 width: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                ),
+                child: CircularProgressIndicator(strokeWidth: 2),
               )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Flexible(
+                  Expanded(
                     child: Text(
                       label,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -65,10 +67,7 @@ class AppButton extends StatelessWidget {
                   ),
                   if (trailingIcon != null) ...[
                     const SizedBox(width: 8),
-                    Icon(
-                      trailingIcon,
-                      size: 18,
-                    ),
+                    Icon(trailingIcon, size: 18),
                   ],
                 ],
               ),

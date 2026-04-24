@@ -7,7 +7,7 @@ import 'package:userapp/models/appointment_models.dart';
 import 'package:userapp/providers/appointment_providers.dart';
 import 'package:userapp/providers/auth_provider.dart';
 import 'package:userapp/providers/blood_request_provider.dart' hide bloodRequestApiProvider;
-import 'package:userapp/providers/urgent_requests_provider.dart' hide bloodRequestApiProvider;
+import 'package:userapp/providers/urgent_requests_provider.dart';
 import 'package:userapp/theme/app_colors.dart';
 
 class RequestResponseQuestionnaireScreen extends ConsumerStatefulWidget {
@@ -80,7 +80,8 @@ class _RequestResponseQuestionnaireScreenState
           );
 
       ref.invalidate(allRequestsProvider);
-      ref.invalidate(urgentBloodRequestsProvider);
+      ref.invalidate(compatibleUrgentRequestsProvider(userId));
+ref.invalidate(hasUnreadUrgentRequestsProvider(userId));
       ref.invalidate(userBloodRequestsProvider(userId));
 
       if (!mounted) return;

@@ -34,4 +34,9 @@ public class CarteDonneurController {
     public ResponseEntity<CarteDonneur> getByUser(@PathVariable Long userId) {
         return ResponseEntity.ok(service.getCardByUser(userId));
     }
+
+    @GetMapping("/user/{userId}/can-access")
+    public ResponseEntity<Boolean> canAccess(@PathVariable Long userId) {
+        return ResponseEntity.ok(service.canAccessCard(userId));
+    }
 }

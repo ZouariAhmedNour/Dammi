@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:userapp/models/blood_request.dart';
 import 'package:userapp/providers/auth_provider.dart';
+import 'package:userapp/providers/blood_request_provider.dart';
 import 'package:userapp/providers/urgent_requests_provider.dart';
 import 'package:userapp/theme/app_colors.dart';
 
@@ -43,7 +44,15 @@ class _UrgentBloodRequestsScreenState
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
     final isPertinent = auth.user?.statutPertinent ?? false;
-    final urgentAsync = ref.watch(urgentBloodRequestsProvider);
+final userId = auth.user?.id;
+
+if (userId == null) {
+  return const Scaffold(
+    body: Center(child: Text('Utilisateur non connecté.')),
+  );
+}
+
+final urgentAsync = ref.watch(compatibleUrgentRequestsProvider(userId));
 
     return Scaffold(
       appBar: AppBar(
@@ -98,11 +107,7 @@ class _UrgentBloodRequestsScreenState
 
                   return RefreshIndicator(
                     onRefresh: () async {
-                      ref.invalidate(urgentBloodRequestsProvider);
-                      final userId = auth.user?.id;
-                      if (userId != null) {
-                        ref.invalidate(hasUnreadUrgentRequestsProvider(userId));
-                      }
+                     ref.invalidate(compatibleUrgentRequestsProvider(userId));
                     },
                     child: ListView.separated(
                       physics: const AlwaysScrollableScrollPhysics(),

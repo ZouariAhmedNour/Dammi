@@ -104,4 +104,18 @@ public class DemandeSangController {
     ) {
         return ResponseEntity.ok(service.contribuerAUneDemande(id, req.getUserId()));
     }
+
+    @GetMapping("/publiques/compatibles/{userId}")
+    @PreAuthorize("hasAnyRole('USER', 'AGENT', 'ADMIN')")
+    @Operation(summary = "Demandes visibles selon la compatibilité sanguine")
+    public ResponseEntity<List<DemandeSangResponse>> getCompatibles(@PathVariable Long userId) {
+        return ResponseEntity.ok(service.getDemandesCompatiblesPourUser(userId));
+    }
+
+    @GetMapping("/publiques/urgentes/compatibles/{userId}")
+    @PreAuthorize("hasAnyRole('USER', 'AGENT', 'ADMIN')")
+    @Operation(summary = "Demandes urgentes compatibles avec l'utilisateur")
+    public ResponseEntity<List<DemandeSangResponse>> getUrgentesCompatibles(@PathVariable Long userId) {
+        return ResponseEntity.ok(service.getDemandesUrgentesCompatiblesPourUser(userId));
+    }
 }

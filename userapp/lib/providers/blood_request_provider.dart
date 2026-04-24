@@ -29,6 +29,16 @@ final allRequestsProvider =
   return ref.read(bloodRequestApiProvider).getAllRequests();
 });
 
+final compatibleRequestsProvider =
+    FutureProvider.family<List<BloodRequest>, int>((ref, userId) async {
+  return ref.read(bloodRequestApiProvider).getCompatibleRequests(userId);
+});
+
+final compatibleUrgentRequestsProvider =
+    FutureProvider.family<List<BloodRequest>, int>((ref, userId) async {
+  return ref.read(bloodRequestApiProvider).getCompatibleUrgentRequests(userId);
+});
+
 class BloodRequestSubmitNotifier extends StateNotifier<AsyncValue<void>> {
   final BloodRequestApi _api;
 

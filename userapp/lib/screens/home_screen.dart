@@ -7,6 +7,7 @@ import 'package:userapp/components/notification_button.dart';
 import 'package:userapp/components/stat_card.dart';
 import 'package:userapp/components/urgent_need_card.dart';
 import 'package:userapp/providers/auth_provider.dart';
+import 'package:userapp/providers/blood_request_provider.dart';
 import 'package:userapp/providers/urgent_requests_provider.dart';
 import 'package:userapp/providers/user_provider.dart';
 import 'package:userapp/screens/urgent_blood_requests_screen.dart';
@@ -376,7 +377,12 @@ class HomeScreen extends ConsumerWidget {
           else
             Consumer(
               builder: (context, ref, _) {
-                final urgentAsync = ref.watch(urgentBloodRequestsProvider);
+                final userId = auth.user?.id;
+if (userId == null) {
+  return const Text('Utilisateur non connecté');
+}
+
+final urgentAsync = ref.watch(compatibleUrgentRequestsProvider(userId));
 
                 return urgentAsync.when(
                   data: (requests) {

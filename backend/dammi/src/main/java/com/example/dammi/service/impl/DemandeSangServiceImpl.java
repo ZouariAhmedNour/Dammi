@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -154,6 +156,40 @@ public class DemandeSangServiceImpl implements DemandeSangService {
     }
 
     @Override
+    public List<DemandeSangResponse> getDemandesCompatiblesPourUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        String donorGroup = getUserBloodGroup(user);
+        if (donorGroup == null || donorGroup.isBlank()) {
+            return List.of();
+        }
+
+        return demandeSangRepository.findByStatut(StatutDemande.EN_ATTENTE)
+                .stream()
+                .filter(d -> isCompatible(donorGroup, getRequestBloodGroup(d)))
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Override
+    public List<DemandeSangResponse> getDemandesUrgentesCompatiblesPourUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        String donorGroup = getUserBloodGroup(user);
+        if (donorGroup == null || donorGroup.isBlank()) {
+            return List.of();
+        }
+
+        return demandeSangRepository.findByUrgenceTrueAndStatut(StatutDemande.EN_ATTENTE)
+                .stream()
+                .filter(d -> isCompatible(donorGroup, getRequestBloodGroup(d)))
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Override
     @Transactional
     public ContribuerDemandeResponse contribuerAUneDemande(Long demandeId, Long userId) {
         DemandeSang demande = findDemande(demandeId);
@@ -190,5 +226,48 @@ public class DemandeSangServiceImpl implements DemandeSangService {
                 .completed(completed)
                 .build();
     }
+
+    private String getRequestBloodGroup(DemandeSang demande) {
+        return demande.getTypeSanguin() != null && demande.getTypeSanguin().getAboGroup() != null
+                ? normalize(demande.getTypeSanguin().getAboGroup())
+                : null;
+    }
+
+    private String getUserBloodGroup(User user) {
+        // adapte si ton User backend expose le groupe autrement
+        try {
+            if (user.getTypeSanguin() != null && user.getTypeSanguin().getAboGroup() != null) {
+                return normalize(user.getTypeSanguin().getAboGroup());
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    private String normalize(String value) {
+        return value == null ? null : value.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private boolean isCompatible(String donorGroup, String recipientGroup) {
+        if (donorGroup == null || recipientGroup == null) return false;
+
+        Set<String> allowedRecipients = switch (donorGroup) {
+            case "O-" -> Set.of("O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+");
+            case "O+" -> Set.of("O+", "A+", "B+", "AB+");
+            case "A-" -> Set.of("A-", "A+", "AB-", "AB+");
+            case "A+" -> Set.of("A+", "AB+");
+            case "B-" -> Set.of("B-", "B+", "AB-", "AB+");
+            case "B+" -> Set.of("B+", "AB+");
+            case "AB-" -> Set.of("AB-", "AB+");
+            case "AB+" -> Set.of("AB+");
+            default -> Set.of();
+        };
+
+        return allowedRecipients.contains(recipientGroup);
+    }
+
+
+
+
 
 }

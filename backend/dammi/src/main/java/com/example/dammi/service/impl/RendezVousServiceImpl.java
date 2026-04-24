@@ -68,6 +68,11 @@ public class RendezVousServiceImpl implements RendezVousService {
     @Transactional
     public RendezVousResponse annulerRendezVous(Long id) {
         RendezVous rdv = find(id);
+
+        if (rdv.getStatut() == StatutRendezVous.EFFECTUE) {
+            throw new IllegalStateException("Impossible d'annuler un rendez-vous déjà effectué");
+        }
+
         rdv.setStatut(StatutRendezVous.ANNULE);
         return toResponse(rendezVousRepository.save(rdv));
     }
@@ -97,10 +102,17 @@ public class RendezVousServiceImpl implements RendezVousService {
             throw new IllegalStateException("Impossible de créer un don depuis un rendez-vous annulé");
         }
 
+        if (rdv.getStatut() == StatutRendezVous.EFFECTUE) {
+            throw new IllegalStateException("Ce rendez-vous a déjà été transformé en don");
+        }
+
         DonRequest request = new DonRequest();
         request.setUserId(rdv.getUser().getId());
         request.setDateDon(java.time.LocalDate.now());
         request.setPointCollecteId(rdv.getPointCollecte() != null ? rdv.getPointCollecte().getId() : null);
+
+        // IMPORTANT : le don doit être validé ici
+        request.setStatus(com.example.dammi.entity.enums.StatutDon.VALIDE);
 
         DonResponse response = donService.creerDon(request);
 

@@ -18,4 +18,6 @@ public interface DemandeSangService {
     void supprimerDemande(Long id);
     List<DemandeSangResponse> getDemandesUrgentesPubliques();
     ContribuerDemandeResponse contribuerAUneDemande(Long demandeId, Long userId);
+    List<DemandeSangResponse> getDemandesCompatiblesPourUser(Long userId);
+    List<DemandeSangResponse> getDemandesUrgentesCompatiblesPourUser(Long userId);
 }

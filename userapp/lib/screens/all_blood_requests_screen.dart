@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:userapp/providers/auth_provider.dart';
 import 'package:userapp/providers/blood_request_provider.dart';
 import 'package:userapp/screens/urgent_blood_requests_screen.dart';
 import 'package:userapp/theme/app_colors.dart';
@@ -10,7 +11,16 @@ class AllBloodRequestsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final requestsAsync = ref.watch(allRequestsProvider);
+    final auth = ref.watch(authControllerProvider);
+final userId = auth.user?.id;
+
+if (userId == null) {
+  return const Scaffold(
+    body: Center(child: Text('Utilisateur non connecté.')),
+  );
+}
+
+final requestsAsync = ref.watch(compatibleRequestsProvider(userId));
 
     return Scaffold(
       appBar: AppBar(
@@ -48,7 +58,7 @@ class AllBloodRequestsScreen extends ConsumerWidget {
 
             return RefreshIndicator(
               onRefresh: () async {
-                ref.invalidate(allRequestsProvider);
+                ref.invalidate(compatibleRequestsProvider(userId));
               },
               child: ListView.separated(
                 itemCount: sorted.length,

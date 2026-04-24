@@ -1,27 +1,27 @@
-class DonorCardModel {
+class DonorCard {
   final int id;
   final String groupeSanguin;
   final int nbDon;
   final DateTime? dateEditionCarte;
   final String? lieuCollecte;
 
-  const DonorCardModel({
+  DonorCard({
     required this.id,
     required this.groupeSanguin,
     required this.nbDon,
-    this.dateEditionCarte,
-    this.lieuCollecte,
+    required this.dateEditionCarte,
+    required this.lieuCollecte,
   });
 
-  factory DonorCardModel.fromJson(Map<String, dynamic> json) {
-    return DonorCardModel(
+  factory DonorCard.fromJson(Map<String, dynamic> json) {
+    return DonorCard(
       id: json['id'] as int,
-      groupeSanguin: (json['groupeSanguin'] ?? '').toString(),
+      groupeSanguin: json['groupeSanguin'] ?? '',
       nbDon: (json['nbDon'] ?? 0) as int,
       dateEditionCarte: json['dateEditionCarte'] != null
-          ? DateTime.tryParse(json['dateEditionCarte'].toString())
+          ? DateTime.tryParse(json['dateEditionCarte'])
           : null,
-      lieuCollecte: json['lieuCollecte']?.toString(),
+      lieuCollecte: json['lieuCollecte'],
     );
   }
 }

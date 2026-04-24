@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+
 import 'package:userapp/components/app_button.dart';
+import 'package:userapp/components/donor_card_preview_sheet.dart';
 import 'package:userapp/components/profile_menu_tile.dart';
 import 'package:userapp/providers/auth_provider.dart';
 import 'package:userapp/providers/donor_card_provider.dart';
@@ -22,6 +24,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
+    final accessAsync = ref.watch(donorCardAccessProvider);
     final donorCardAsync = ref.watch(donorCardProvider);
 
     final user = auth.user;
@@ -32,9 +35,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // HEADER
           Row(
             children: [
-              const Icon(Icons.water_drop_rounded, color: AppColors.primary, size: 32),
+              const Icon(Icons.water_drop_rounded,
+                  color: AppColors.primary, size: 32),
               const SizedBox(width: 8),
               const Text(
                 'Dammi',
@@ -51,63 +56,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
             ],
           ),
+
           const Gap(24),
+
+          // ✅ AVATAR SIMPLE (SANS GROUPE SANGUIN)
           Center(
-            child: Stack(
-              children: [
-                Container(
-                  width: 150,
-                  height: 150,
-                  decoration: BoxDecoration(
-                    color: Colors.black87,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: const Icon(
-                    Icons.person_rounded,
-                    size: 90,
-                    color: Colors.white70,
-                  ),
-                ),
-                Positioned(
-                  right: -4,
-                  bottom: -4,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: donorCardAsync.when(
-                      data: (card) => Text(
-                        card?.groupeSanguin ?? 'O+',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 20,
-                        ),
-                      ),
-                      loading: () => const Text(
-                        '...',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      error: (_, __) => const Text(
-                        'O+',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 20,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            child: Container(
+              width: 150,
+              height: 150,
+              decoration: BoxDecoration(
+                color: Colors.black87,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: const Icon(
+                Icons.person_rounded,
+                size: 90,
+                color: Colors.white70,
+              ),
             ),
           ),
+
           const Gap(18),
+
+          // NOM
           Center(
             child: Text(
               fullName,
@@ -118,41 +89,109 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
             ),
           ),
+
           const Gap(6),
+
           const Center(
             child: Text(
-              'Donneur Régulier depuis 2021',
+              'Donneur',
               style: TextStyle(
                 fontSize: 18,
                 color: AppColors.textSecondary,
               ),
             ),
           ),
+
           const Gap(26),
+
           const AppButton(
             label: 'Modifier le Profil',
             trailingIcon: Icons.edit_outlined,
           ),
+
           const Gap(14),
-          AppButton(
-            label: 'Télécharger ma Carte Donneur',
-            trailingIcon: Icons.badge_outlined,
-            backgroundColor: AppColors.primaryLight,
-            foregroundColor: AppColors.primaryDark,
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Fonction PDF à brancher ensuite')),
-              );
-            },
-          ),
+
+          accessAsync.when(
+  loading: () => AppButton(
+    label: 'Vérification...',
+    trailingIcon: Icons.badge_outlined,
+    backgroundColor: Colors.grey.shade400,
+    foregroundColor: Colors.white70,
+    height: 64,
+    fontSize: 13,
+    loading: true,
+    onPressed: null,
+  ),
+  error: (_, __) => AppButton(
+    label: 'Vous devez faire au moins un don pour récupérer votre carte donneur',
+    trailingIcon: Icons.badge_outlined,
+    backgroundColor: Colors.grey.shade400,
+    foregroundColor: Colors.white70,
+    height: 64,
+    fontSize: 13,
+    onPressed: null,
+  ),
+  data: (canAccess) {
+    final access = canAccess ?? false;
+
+    return AppButton(
+      label: access
+          ? 'Télécharger ma Carte Donneur'
+          : 'Vous devez faire au moins un don pour récupérer votre carte donneur',
+      trailingIcon: Icons.badge_outlined,
+      backgroundColor:
+          access ? AppColors.primaryLight : Colors.grey.shade400,
+      foregroundColor:
+          access ? AppColors.primaryDark : Colors.white70,
+      height: 64,
+      fontSize: 13,
+      onPressed: access
+          ? () async {
+              final currentUser = auth.user;
+              if (currentUser == null || currentUser.id == null) return;
+
+              try {
+                final api = ref.read(donorCardApiProvider);
+                final card = await api.getOrGenerateCard(currentUser.id!);
+
+                if (!mounted) return;
+
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => DonorCardPreviewSheet(
+                    fullName: fullName,
+                    card: card,
+                  ),
+                );
+              } catch (e) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Erreur lors du chargement de la carte'),
+                  ),
+                );
+              }
+            }
+          : null,
+    );
+  },
+),
+
           const Gap(22),
+
+          // STATS
           donorCardAsync.when(
             data: (card) {
-              final total = card?.nbDon ?? 12;
+              final total = card?.nbDon ?? 0;
+
               final lastDonation = user?.lastDonation != null
-                  ? DateFormat('dd MMM', 'fr_FR').format(user!.lastDonation!)
-                  : '14 Oct.';
-              final location = card?.lieuCollecte ?? 'Hôpital Central';
+                  ? DateFormat('dd MMM', 'fr_FR')
+                      .format(user!.lastDonation!)
+                  : '--';
+
+              final location = card?.lieuCollecte ?? '--';
 
               return Row(
                 children: [
@@ -176,20 +215,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             },
             loading: () => Row(
               children: [
-                Expanded(child: _miniStat(title: 'TOTAL DONS', main: '...', sub: '')),
+                Expanded(
+                    child:
+                        _miniStat(title: 'TOTAL DONS', main: '...', sub: '')),
                 const Gap(14),
-                Expanded(child: _miniStat(title: 'DERNIER DON', main: '...', sub: '')),
+                Expanded(
+                    child: _miniStat(
+                        title: 'DERNIER DON', main: '...', sub: '')),
               ],
             ),
             error: (_, __) => Row(
               children: [
-                Expanded(child: _miniStat(title: 'TOTAL DONS', main: '12', sub: 'pintes')),
+                Expanded(
+                    child:
+                        _miniStat(title: 'TOTAL DONS', main: '--', sub: '')),
                 const Gap(14),
-                Expanded(child: _miniStat(title: 'DERNIER DON', main: '14 Oct.', sub: 'Hôpital Central')),
+                Expanded(
+                    child: _miniStat(
+                        title: 'DERNIER DON', main: '--', sub: '--')),
               ],
             ),
           ),
+
           const Gap(18),
+
+          // ALERTES
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
@@ -242,7 +292,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ],
             ),
           ),
+
           const Gap(28),
+
           const Text(
             'GÉNÉRAL',
             style: TextStyle(
@@ -252,19 +304,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               fontSize: 18,
             ),
           ),
+
           const Gap(14),
+
           ProfileMenuTile(
             icon: Icons.lock_outline_rounded,
             title: 'Confidentialité',
             onTap: () {},
           ),
+
           const Gap(12),
+
           ProfileMenuTile(
             icon: Icons.help_outline_rounded,
             title: "Centre d'aide",
             onTap: () {},
           ),
+
           const Gap(12),
+
           ProfileMenuTile(
             icon: Icons.logout_rounded,
             title: 'Déconnexion',
