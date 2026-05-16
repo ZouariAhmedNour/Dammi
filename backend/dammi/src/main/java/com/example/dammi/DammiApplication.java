@@ -18,8 +18,8 @@ public class DammiApplication {
     public void logSwaggerUrl() {
         log.info("==============================================");
         log.info("Application démarrée avec succès");
-        log.info("Swagger UI : https://localhost:8443/swagger-ui.html");
-        log.info("OpenAPI docs : https://localhost:8443/api-docs");
+        log.info("Swagger UI : http://localhost:8080/swagger-ui.html");
+        log.info("OpenAPI docs : http://localhost:8080/api-docs");
         log.info("==============================================");
     }
 

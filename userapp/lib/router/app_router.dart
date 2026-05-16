@@ -4,6 +4,7 @@ import 'package:userapp/models/appointment_models.dart';
 import 'package:userapp/providers/auth_provider.dart';
 import 'package:userapp/screens/all_blood_requests_screen.dart';
 import 'package:userapp/screens/blood_request_history_screen.dart';
+import 'package:userapp/screens/chat_screen.dart';
 import 'package:userapp/screens/history_rdv_screen.dart';
 import 'package:userapp/screens/home_screen.dart';
 import 'package:userapp/screens/login_screen.dart';
@@ -56,13 +57,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return RendezVousResultScreen(args: args);
         },
       ),
-       GoRoute(
-  path: '/request_response_questionnaire/:demandeId',
-  builder: (context, state) {
-    final demandeId = int.parse(state.pathParameters['demandeId']!);
-    return RequestResponseQuestionnaireScreen(demandeId: demandeId);
-  },
-),
+      GoRoute(
+        path: '/request_response_questionnaire/:demandeId',
+        builder: (context, state) {
+          final demandeId = int.parse(state.pathParameters['demandeId']!);
+          return RequestResponseQuestionnaireScreen(demandeId: demandeId);
+        },
+      ),
 
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),
@@ -96,7 +97,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/demandes',
             builder: (context, state) => const AllBloodRequestsScreen(),
           ),
-         
+          GoRoute(
+            path: '/chat',
+            builder: (context, state) => const ChatScreen(),
+          ),
         ],
       ),
     ],
