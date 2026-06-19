@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import java.util.*;
@@ -110,7 +111,13 @@ public class GeminiChatService implements ChatService {
 
             return new ChatResponseDto(answer);
 
+        } catch (HttpStatusCodeException e) {
+            System.out.println("GEMINI HTTP ERROR STATUS = " + e.getStatusCode());
+            System.out.println("GEMINI HTTP ERROR BODY = " + e.getResponseBodyAsString());
+            throw e;
+
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException("Erreur Gemini: " + e.getMessage(), e);
         }
     }
